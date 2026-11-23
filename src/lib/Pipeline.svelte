@@ -175,6 +175,14 @@
             {step.enabled ? stepSummary(step.rule) : "Off"}
           </span>
         </button>
+        <button
+          class="icon rm"
+          title="Remove this step"
+          aria-label="Remove step {i + 1}, {RULE_BY_KIND[step.rule.kind].label}"
+          onclick={() => remove(i)}
+        >
+          <Icon name="close" />
+        </button>
       </li>
     {/each}
     {#if dragFrom !== null}
@@ -224,12 +232,23 @@
   <section class="editor" aria-label="Step editor">
     {#if pick === "add"}
       <div class="head">
-        <h2>Add a step</h2>
+        <h2 class="with-tip">
+          Add a step
+          <span class="tip">
+            <button
+              class="tip-btn"
+              aria-label="How steps work"
+              aria-describedby="steps-tip"
+            >
+              ?
+            </button>
+            <span class="tip-text" id="steps-tip" role="tooltip">
+              Steps run from top to bottom. Each one changes the name the step
+              before it made.
+            </span>
+          </span>
+        </h2>
       </div>
-      <p class="hint">
-        Steps run from top to bottom. Each one changes the name the step before
-        it made.
-      </p>
       <div class="catalogue">
         {#each groups as g (g)}
           <h3>{g}</h3>
@@ -354,7 +373,6 @@
         <StepCard
           bind:step={app.steps[pickedIndex]}
           index={pickedIndex}
-          onremove={() => remove(pickedIndex)}
           onduplicate={() => duplicate(pickedIndex)}
         />
       {/key}
@@ -410,8 +428,26 @@
     gap: 2px;
   }
   .slot {
+    position: relative;
     border-top: 2px solid transparent;
     margin-top: -2px;
+  }
+  /* Remove sits on the row: shown on hover, keyboard focus and the selected step. */
+  .rm {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    opacity: 0;
+  }
+  .slot:hover .rm,
+  .slot:focus-within .rm,
+  .item.on + .rm {
+    opacity: 1;
+  }
+  .slot:hover .item,
+  .slot:focus-within .item,
+  .slot .item.on {
+    padding-right: 32px;
   }
   .slot.over,
   .endzone.over {
@@ -499,13 +535,62 @@
     font-size: 12px;
     color: var(--muted);
   }
+  .with-tip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tip {
+    position: relative;
+    display: inline-flex;
+  }
+  .tip-btn {
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    min-height: 0;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 11px;
+    line-height: 1;
+    color: var(--muted);
+    background: transparent;
+  }
+  .tip-btn:hover {
+    color: var(--text);
+  }
+  .tip-text {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: -8px;
+    z-index: 20;
+    width: 240px;
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-2);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .tip:hover .tip-text,
+  .tip:focus-within .tip-text {
+    opacity: 1;
+    visibility: visible;
+  }
   .catalogue {
     display: flex;
     flex-direction: column;
     gap: 2px;
   }
   .catalogue h3 {
-    margin: 12px 0 4px 8px;
+    margin: 16px 0 4px 8px;
+    color: var(--accent-text);
   }
   .catalogue h3:first-child {
     margin-top: 0;

@@ -1,5 +1,5 @@
-<!-- The editor for one step, drawn from its catalogue entry: on/off, duplicate, remove
-     and its fields. -->
+<!-- The editor for one step, drawn from its catalogue entry: on/off, duplicate and its
+     fields. Remove is on the step's row in the step list. -->
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
   import { open } from "@tauri-apps/plugin-dialog";
@@ -19,13 +19,11 @@
     step = $bindable(),
     index,
     problem = null,
-    onremove,
     onduplicate,
   }: {
     step: Step;
     index: number;
     problem?: string | null;
-    onremove: () => void;
     onduplicate: () => void;
   } = $props();
 
@@ -191,14 +189,6 @@
       onclick={onduplicate}
     >
       <Icon name="duplicate" />
-    </button>
-    <button
-      class="icon"
-      title="Remove"
-      aria-label="Remove step"
-      onclick={onremove}
-    >
-      <Icon name="close" />
     </button>
   </header>
   <p class="about">{def.summary}</p>
