@@ -20,9 +20,15 @@
   --btn-text: #1c1406;
   --shadow: 0 24px 60px rgb(30 25 15 / 0.12), 0 2px 8px rgb(30 25 15 / 0.06);
 
-  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", system-ui, Ubuntu, Inter, Roboto, sans-serif;
-  --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", system-ui, Ubuntu, Inter, Roboto, sans-serif;
-  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  --sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text",
+    "Segoe UI", system-ui, Ubuntu, Inter, Roboto, sans-serif;
+  --display:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "Segoe UI Variable Display", "Segoe UI", system-ui, Ubuntu, Inter, Roboto,
+    sans-serif;
+  --mono:
+    ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   color-scheme: light;
 }
@@ -127,7 +133,10 @@ kbd {
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
-  transition: background-color 0.15s var(--ease), border-color 0.15s var(--ease), filter 0.15s var(--ease);
+  transition:
+    background-color 0.15s var(--ease),
+    border-color 0.15s var(--ease),
+    filter 0.15s var(--ease);
 }
 .btn-primary {
   background: var(--accent);
@@ -208,7 +217,11 @@ input:focus-visible {
   position: absolute;
   inset: 0 0 auto;
   height: 520px;
-  background: repeating-linear-gradient(to bottom, transparent 0 39px, var(--line-soft) 39px 40px);
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 39px,
+    var(--line-soft) 39px 40px
+  );
   -webkit-mask-image: linear-gradient(to bottom, #000, transparent);
   mask-image: linear-gradient(to bottom, #000, transparent);
   pointer-events: none;
@@ -392,7 +405,9 @@ h1 {
   border-radius: 4px;
   background: var(--bg);
   position: relative;
-  transition: background-color 0.2s var(--ease), border-color 0.2s var(--ease);
+  transition:
+    background-color 0.2s var(--ease),
+    border-color 0.2s var(--ease);
 }
 .box.on {
   background: var(--accent);
@@ -448,7 +463,9 @@ h1 {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 10px;
-  transition: border-color 0.2s var(--ease), opacity 0.2s var(--ease);
+  transition:
+    border-color 0.2s var(--ease),
+    opacity 0.2s var(--ease);
 }
 .step.focus {
   border-color: var(--accent);
@@ -553,7 +570,9 @@ h1 {
   color: var(--btn-text);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  transition: transform 0.12s var(--ease), opacity 0.2s var(--ease);
+  transition:
+    transform 0.12s var(--ease),
+    opacity 0.2s var(--ease);
 }
 .w-rename.pressed {
   transform: scale(0.95);
@@ -746,7 +765,9 @@ h1 {
   color: var(--muted);
   border: 1px solid transparent;
   cursor: pointer;
-  transition: background-color 0.2s var(--ease), color 0.2s var(--ease);
+  transition:
+    background-color 0.2s var(--ease),
+    color 0.2s var(--ease);
 }
 .tag-tabs button.on {
   color: var(--text);
@@ -829,7 +850,9 @@ h1 {
   padding: 5px 14px;
   border-radius: 7px;
   font-weight: 600;
-  transition: transform 0.12s var(--ease), opacity 0.2s var(--ease);
+  transition:
+    transform 0.12s var(--ease),
+    opacity 0.2s var(--ease);
 }
 .hbtn-primary {
   background: var(--accent);

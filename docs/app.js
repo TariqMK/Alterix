@@ -1,21 +1,36 @@
 // Alterix product page: live previews (hero window, steps, tags, undo) built from small models, plus OS-aware download links.
 
 const REPO = "TariqMK/Alterix";
-const ASSET = { windows: /windows-x64\.exe$/i, macos: /macos-arm64\.zip$/i, linux: /linux-x64\.AppImage$/i };
+const ASSET = {
+  windows: /windows-x64\.exe$/i,
+  macos: /macos-arm64\.zip$/i,
+  linux: /linux-x64\.AppImage$/i,
+};
 const OS_NAME = { windows: "Windows", macos: "macOS", linux: "Linux" };
 const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const IS_MAC = /mac/i.test(navigator.userAgentData?.platform || navigator.platform || "");
+const IS_MAC = /mac/i.test(
+  navigator.userAgentData?.platform || navigator.platform || "",
+);
 const MOD = IS_MAC ? "⌘" : "Ctrl+";
 
 const $ = (id) => document.getElementById(id);
-const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const esc = (s) =>
+  s.replace(
+    /[&<>"]/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+  );
 
 // The app's highlight: common start and end stay plain, the changed middle is marked.
 function diff(a, b) {
   let i = 0;
   while (i < a.length && i < b.length && a[i] === b[i]) i++;
   let j = 0;
-  while (j < a.length - i && j < b.length - i && a[a.length - 1 - j] === b[b.length - 1 - j]) j++;
+  while (
+    j < a.length - i &&
+    j < b.length - i &&
+    a[a.length - 1 - j] === b[b.length - 1 - j]
+  )
+    j++;
   return `${esc(b.slice(0, i))}<mark>${esc(b.slice(i, b.length - j))}</mark>${esc(b.slice(b.length - j))}`;
 }
 
@@ -40,7 +55,13 @@ const FILES = [
 ];
 
 const hero = {
-  rows: FILES.map(([name, mb, date, checked = true]) => ({ name, orig: name, mb, date, checked })),
+  rows: FILES.map(([name, mb, date, checked = true]) => ({
+    name,
+    orig: name,
+    mb,
+    date,
+    checked,
+  })),
   steps: { name: true, numbers: true, ext: true },
   nameText: "Lisbon",
   typing: false,
@@ -61,7 +82,9 @@ function preview() {
     return ext ? `${base}.${ext}` : base;
   });
   const seen = {};
-  out.forEach((x) => x && (seen[x.toLowerCase()] = (seen[x.toLowerCase()] || 0) + 1));
+  out.forEach(
+    (x) => x && (seen[x.toLowerCase()] = (seen[x.toLowerCase()] || 0) + 1),
+  );
   return out.map((x, i) => {
     if (x == null) return { status: "off" };
     if (seen[x.toLowerCase()] > 1) return { status: "conflict", name: x };
@@ -77,7 +100,8 @@ function renderHero() {
       let nn = "";
       if (q.status === "changed") nn = diff(r.name, q.name);
       else if (q.status === "same") nn = esc(q.name);
-      else if (q.status === "conflict") nn = `${esc(q.name)}<span class="flag">Conflict</span>`;
+      else if (q.status === "conflict")
+        nn = `${esc(q.name)}<span class="flag">Conflict</span>`;
       return `<div class="w-row ${q.status}">
         <span class="c-check"><span class="box${r.checked ? " on" : ""}"></span></span>
         <span class="c-name">${esc(r.name)}</span>
@@ -127,7 +151,11 @@ function doUndo() {
 }
 
 // One story on a loop: switch steps off and on, cause and fix a clash, rename, undo, then retype the name.
-const typeTo = (text) => () => ((hero.nameText = text), (hero.typing = true), (hero.focus = "name"));
+const typeTo = (text) => () => (
+  (hero.nameText = text),
+  (hero.typing = true),
+  (hero.focus = "name")
+);
 const SCRIPT = {
   3: () => ((hero.focus = "ext"), (hero.steps.ext = false)),
   6: () => ((hero.focus = "numbers"), (hero.steps.numbers = false)),
@@ -163,7 +191,8 @@ const PIPE_FILES = [
   "invoice_march copy.pdf",
   "client_brief_final.docx",
 ];
-const titleCase = (s) => s.toLowerCase().replace(/(^|\s)(\S)/g, (m, a, b) => a + b.toUpperCase());
+const titleCase = (s) =>
+  s.toLowerCase().replace(/(^|\s)(\S)/g, (m, a, b) => a + b.toUpperCase());
 const PIPE_STEPS = [
   (b) => b.replace(/\s*\bcopy\b\s*/gi, " ").trim(),
   (b) => b.replace(/_/g, " "),
@@ -171,12 +200,17 @@ const PIPE_STEPS = [
   (b, i) => `${String(i + 1).padStart(2, "0")} ${b}`,
 ];
 function renderPipe() {
-  const on = [...document.querySelectorAll("#pipe-steps input")].map((x) => x.checked);
+  const on = [...document.querySelectorAll("#pipe-steps input")].map(
+    (x) => x.checked,
+  );
   $("pipe-rows").innerHTML = PIPE_FILES.map((f, i) => {
     let [b, ext] = splitExt(f);
     PIPE_STEPS.forEach((fn, k) => on[k] && (b = fn(b, i)));
     const n = `${b}.${ext}`;
-    const cell = n === f ? `<span class="muted">${esc(n)}</span>` : `<span class="chg">${diff(f, n)}</span>`;
+    const cell =
+      n === f
+        ? `<span class="muted">${esc(n)}</span>`
+        : `<span class="chg">${diff(f, n)}</span>`;
     return `<div class="prow"><span>${esc(f)}</span>${cell}</div>`;
   }).join("");
 }
@@ -217,9 +251,14 @@ function renderTags() {
   const set = TAG_SETS[tagIndex];
   $("tag-tpl").textContent = set.tpl;
   $("tag-rows").innerHTML = set.rows
-    .map(([a, b]) => `<div class="trow"><span>${esc(a)}</span><span class="chg">${diff(a, b)}</span></div>`)
+    .map(
+      ([a, b]) =>
+        `<div class="trow"><span>${esc(a)}</span><span class="chg">${diff(a, b)}</span></div>`,
+    )
     .join("");
-  document.querySelectorAll("#tag-tabs button").forEach((el) => el.classList.toggle("on", +el.dataset.t === tagIndex));
+  document
+    .querySelectorAll("#tag-tabs button")
+    .forEach((el) => el.classList.toggle("on", +el.dataset.t === tagIndex));
 }
 function showTags(i) {
   if (i === tagIndex) return;
@@ -256,7 +295,8 @@ function renderHist() {
     const [from, to] = hist.undone ? [newN, oldN] : [oldN, newN];
     return `<div class="hrow"><span class="muted">${esc(from)}</span><span class="arrow">→</span><span class="chg">${diff(from, to)}</span></div>`;
   }).join("");
-  $("hist-a-meta").textContent = `2025-06-16 20:15:42${hist.undone ? " · undone" : ""}`;
+  $("hist-a-meta").textContent =
+    `2025-06-16 20:15:42${hist.undone ? " · undone" : ""}`;
   $("hist-a").classList.toggle("hist-dim", hist.undone);
   const u = $("hist-undo");
   u.classList.toggle("hbtn-off", hist.undone);
@@ -268,7 +308,7 @@ let histTick = 0;
 function stepHist() {
   histTick = (histTick + 1) % 12;
   if (histTick === 5) hist.pressed = true;
-  if (histTick === 6) (hist.pressed = false), (hist.undone = true);
+  if (histTick === 6) ((hist.pressed = false), (hist.undone = true));
   if (histTick === 0) hist.undone = false;
   renderHist();
 }
@@ -292,7 +332,11 @@ function stopTimer() {
 /* ---------- Downloads ---------- */
 
 function detectOS() {
-  const platform = (navigator.userAgentData?.platform || navigator.platform || "").toLowerCase();
+  const platform = (
+    navigator.userAgentData?.platform ||
+    navigator.platform ||
+    ""
+  ).toLowerCase();
   const ua = navigator.userAgent.toLowerCase();
   if (/android|iphone|ipad|ipod/.test(ua)) return null; // Phones and tablets get no direct download.
   if (platform.includes("win")) return "windows";
@@ -306,12 +350,17 @@ async function wireDownloads() {
   const heroBtn = $("hero-download");
   if (os) {
     heroBtn.textContent = `Download for ${OS_NAME[os]}`;
-    document.querySelector(`.platform[data-os="${os}"]`)?.classList.add("detected");
+    document
+      .querySelector(`.platform[data-os="${os}"]`)
+      ?.classList.add("detected");
   }
   try {
-    const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
-      headers: { Accept: "application/vnd.github+json" },
-    });
+    const res = await fetch(
+      `https://api.github.com/repos/${REPO}/releases/latest`,
+      {
+        headers: { Accept: "application/vnd.github+json" },
+      },
+    );
     if (!res.ok) return;
     const rel = await res.json();
     for (const [key, pattern] of Object.entries(ASSET)) {
@@ -319,7 +368,8 @@ async function wireDownloads() {
       if (!asset) continue;
       const card = document.querySelector(`.platform[data-os="${key}"]`);
       card.querySelector(".dl").href = asset.browser_download_url;
-      card.querySelector(".size").textContent = `${(asset.size / 1048576).toFixed(0)} MB`;
+      card.querySelector(".size").textContent =
+        `${(asset.size / 1048576).toFixed(0)} MB`;
       if (key === os) heroBtn.href = asset.browser_download_url;
     }
     const date = new Date(rel.published_at).toLocaleDateString("en-GB", {
@@ -328,7 +378,8 @@ async function wireDownloads() {
       year: "numeric",
     });
     $("dl-version").textContent = `${rel.tag_name} · released ${date}`;
-    $("hero-meta").textContent = `${rel.tag_name} · Free · Open source · Offline · No tracking`;
+    $("hero-meta").textContent =
+      `${rel.tag_name} · Free · Open source · Offline · No tracking`;
     $("w-ver").textContent = rel.tag_name;
   } catch {
     // Offline, rate-limited (60 requests an hour) or no release yet: change nothing.
@@ -341,7 +392,9 @@ renderHero();
 renderPipe();
 renderTags();
 renderHist();
-document.querySelectorAll("#pipe-steps input").forEach((x) => x.addEventListener("change", renderPipe));
+document
+  .querySelectorAll("#pipe-steps input")
+  .forEach((x) => x.addEventListener("change", renderPipe));
 document.querySelectorAll("#tag-tabs button").forEach((el) =>
   el.addEventListener("click", () => {
     tagHold = 3; // Let the visitor read the set they picked before the cycle moves on.
@@ -349,6 +402,8 @@ document.querySelectorAll("#tag-tabs button").forEach((el) =>
     showTags(+el.dataset.t);
   }),
 );
-document.addEventListener("visibilitychange", () => (document.hidden ? stopTimer() : startTimer()));
+document.addEventListener("visibilitychange", () =>
+  document.hidden ? stopTimer() : startTimer(),
+);
 startTimer();
 wireDownloads();
