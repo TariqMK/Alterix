@@ -360,9 +360,18 @@ pub fn execute(plan: &Plan) -> (Report, Option<Batch>) {
             });
         };
 
+    // Copy never changes, replaces or trashes one of the files being copied.
+    let sources: HashSet<String> = plan.items.iter().map(|p| p.path.to_lowercase()).collect();
     for (ji, job) in jobs.iter().enumerate() {
         let i = job.index;
         if job.from == job.to {
+            if plan.copy {
+                results[i].ok = false;
+                results[i].message = Some(
+                    "Not copied: the copy would have the same name in the same folder.".into(),
+                );
+                continue;
+            }
             finish(job, &job.to, &mut results, &mut ops, false);
             continue;
         }
@@ -391,6 +400,11 @@ pub fn execute(plan: &Plan) -> (Report, Option<Batch>) {
                         results[i].message = Some(e.to_string());
                     }
                 }
+                continue;
+            } else if plan.copy && sources.contains(&target_key) {
+                results[i].ok = false;
+                results[i].message =
+                    Some("Not copied: one of the original files already has this name.".into());
                 continue;
             } else if plan.overwrite {
                 if let Err(e) = trash::delete(&job.to) {
@@ -711,6 +725,51 @@ mod tests {
         let (rep, _) = execute(&plan(&items, &attrs));
         assert_eq!(rep.failed, 1);
         assert_eq!(read(&d.join("b.txt")), "b");
+        std::fs::remove_dir_all(&d).unwrap();
+    }
+
+    #[test]
+    fn copy_into_same_folder_never_changes_an_unchanged_original() {
+        let d = tmpdir("copy-same");
+        std::fs::write(d.join("a.txt"), "a").unwrap();
+        let before = FileInfo::load(&d.join("a.txt")).unwrap().modified;
+        let mut it = item(&d, "a.txt", "a.txt");
+        it.new_modified = Some("2020-01-02 03:04:05".into());
+        let attrs = Attributes {
+            read_only: Tri::Set,
+            ..Attributes::default()
+        };
+        let items = vec![it];
+        let p = Plan {
+            copy: true,
+            ..plan(&items, &attrs)
+        };
+        let (rep, batch) = execute(&p);
+        let after = FileInfo::load(&d.join("a.txt")).unwrap();
+        assert_eq!(after.modified, before, "the original's date changed");
+        assert!(!after.attrs.contains('R'), "the original became read-only");
+        assert!(!rep.results[0].ok && batch.is_none());
+        std::fs::remove_dir_all(&d).unwrap();
+    }
+
+    #[test]
+    fn copy_with_replace_existing_never_trashes_an_original() {
+        let d = tmpdir("copy-orig");
+        std::fs::write(d.join("a.txt"), "a").unwrap();
+        std::fs::write(d.join("b.txt"), "b").unwrap();
+        // a.txt's copy would take the name of b.txt, which is itself being copied.
+        let items = vec![item(&d, "a.txt", "b.txt"), item(&d, "b.txt", "c.txt")];
+        let attrs = Attributes::default();
+        let p = Plan {
+            copy: true,
+            overwrite: true,
+            ..plan(&items, &attrs)
+        };
+        let (rep, _) = execute(&p);
+        assert_eq!(read(&d.join("a.txt")), "a");
+        assert_eq!(read(&d.join("b.txt")), "b", "an original was replaced");
+        assert_eq!(read(&d.join("c.txt")), "b");
+        assert!(!rep.results[0].ok && rep.results[1].ok);
         std::fs::remove_dir_all(&d).unwrap();
     }
 

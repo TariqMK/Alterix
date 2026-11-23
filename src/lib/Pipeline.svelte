@@ -72,6 +72,7 @@
     if (typeof dir === "string") app.options.newLocation = dir;
   }
 
+  const hasLocation = $derived(!!app.options.newLocation.trim());
   const afterActive = $derived(
     !!app.options.newLocation.trim() ||
       Object.values(app.options.attributes).some((v) => v !== "keep") ||
@@ -255,18 +256,37 @@
           />
           <button class="small" onclick={pickLocation}>Choose…</button>
         </div>
-        <div class="checks">
+        <div class="checks" class:idle={!hasLocation}>
           <label class="check">
-            <input type="radio" bind:group={app.options.copy} value={true} /> Copy
+            <input
+              type="radio"
+              bind:group={app.options.copy}
+              value={true}
+              disabled={!hasLocation}
+            /> Copy
           </label>
           <label class="check">
-            <input type="radio" bind:group={app.options.copy} value={false} /> Move
+            <input
+              type="radio"
+              bind:group={app.options.copy}
+              value={false}
+              disabled={!hasLocation}
+            /> Move
           </label>
           <label class="check">
-            <input type="checkbox" bind:checked={app.options.keepStructure} /> Keep
-            subfolders
+            <input
+              type="checkbox"
+              bind:checked={app.options.keepStructure}
+              disabled={!hasLocation}
+            /> Keep subfolders
           </label>
         </div>
+        {#if !hasLocation}
+          <p class="hint">
+            Copy and Move apply when a folder is set. Without one, items are
+            renamed where they are.
+          </p>
+        {/if}
 
         <h3>Attributes</h3>
         <div class="grid2">
@@ -533,6 +553,9 @@
     align-items: center;
     gap: 8px;
     font-size: 12px;
+  }
+  .idle .check {
+    color: var(--muted);
   }
   .grid2 {
     display: grid;
