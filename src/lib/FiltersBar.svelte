@@ -1,10 +1,10 @@
 <!-- Which items a folder listing shows: masks, kinds, subfolders, lengths and a script
-     condition. Changes apply when "Apply" is pressed or Enter is typed. -->
+     condition. Shown in the step editor. Changes apply when "Apply" is pressed or Enter
+     is typed. -->
 <script lang="ts">
   import { app } from "./state.svelte";
   import { defaultFilters } from "./types";
 
-  let { onclose }: { onclose: () => void } = $props();
   const apply = () => app.rescan();
   const key = (e: KeyboardEvent) => e.key === "Enter" && apply();
 </script>
@@ -96,12 +96,7 @@
       <button class="quiet" onclick={() => (app.filters = defaultFilters())}>
         Reset
       </button>
-      <button class="primary" onclick={apply} disabled={!app.folders.length}>
-        Apply
-      </button>
-      <button class="icon" aria-label="Close filters" onclick={onclose}>
-        ✕
-      </button>
+      <button onclick={apply} disabled={!app.folders.length}> Apply </button>
     </div>
   </div>
 </section>
@@ -109,29 +104,25 @@
 <style>
   .filters {
     display: grid;
-    gap: 8px;
-    padding: 10px 16px;
-    border-bottom: 1px solid var(--line);
-    background: var(--panel);
+    gap: 12px;
   }
   .row {
     display: flex;
     align-items: end;
-    gap: 14px;
+    gap: 8px 16px;
     flex-wrap: wrap;
   }
   .grow {
-    flex: 1;
-    min-width: 220px;
+    flex: 1 1 100%;
   }
   .sel {
     display: grid;
     gap: 4px;
     font-size: 12px;
-    color: var(--muted);
+    color: var(--text-2);
   }
   .small-in input {
-    width: 70px;
+    width: 72px;
   }
   .pair {
     display: flex;
@@ -141,13 +132,13 @@
   .check {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding-bottom: 5px;
+    gap: 8px;
+    flex: 0 0 calc(50% - 8px);
   }
   .buttons {
     display: flex;
-    gap: 6px;
-    align-items: center;
+    gap: 8px;
+    margin-left: auto;
   }
   .mono {
     font-family: var(--mono);

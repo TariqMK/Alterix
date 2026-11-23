@@ -2,22 +2,25 @@
    and form controls. */
 
 :root {
-  --bg: #fbfaf8;
-  --panel: #f4f2ee;
+  /* Graphite neutrals. Amber marks only changed text, the selected step, Rename and focus. */
+  --bg: #ffffff;
+  --panel: #f7f7f8;
   --surface: #ffffff;
-  --text: #1c2129;
-  --muted: #6b7280;
-  --line: #e2ded7;
-  --line-soft: #efece7;
-  --hover: #f1eee8;
-  --select: #fbefd6;
+  --raised: #ececee;
+  --text: #171717;
+  --text-2: #525252;
+  --muted: #6e6e73;
+  --line: rgb(23 23 23 / 0.1);
+  --line-soft: rgb(23 23 23 / 0.06);
+  --hover: rgb(23 23 23 / 0.045);
+  --select: #ececee;
   --accent: #c98a12;
   --accent-text: #8a5a00;
-  --mark: #f8e2b0;
+  --mark: #c98a12;
   --bad: #c2413a;
   --bad-bg: #fbe7e5;
   --scrim: rgb(20 20 25 / 0.28);
-  --shadow: 0 10px 30px rgb(30 25 15 / 0.12), 0 2px 6px rgb(30 25 15 / 0.08);
+  --shadow: 0 8px 24px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.06);
   --font-size: 13px;
   --list-size: 13px;
   --sans:
@@ -29,43 +32,47 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #15181d;
-    --panel: #1a1e24;
-    --surface: #22272f;
-    --text: #e6e8eb;
-    --muted: #8b939e;
-    --line: #2e343d;
-    --line-soft: #242930;
-    --hover: #272d36;
-    --select: #3a3220;
+    --bg: #141415;
+    --panel: #19191b;
+    --surface: #232325;
+    --raised: #2a2a2d;
+    --text: #ededed;
+    --text-2: #a1a1a6;
+    --muted: #85858b;
+    --line: rgb(237 237 237 / 0.09);
+    --line-soft: rgb(237 237 237 / 0.05);
+    --hover: rgb(237 237 237 / 0.05);
+    --select: #2a2a2d;
     --accent: #f2b544;
     --accent-text: #f2b544;
-    --mark: #5a4517;
+    --mark: #f2b544;
     --bad: #f0716a;
     --bad-bg: #3b2221;
     --scrim: rgb(0 0 0 / 0.5);
-    --shadow: 0 10px 30px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.3);
+    --shadow: 0 8px 24px rgb(0 0 0 / 0.45), 0 1px 2px rgb(0 0 0 / 0.3);
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #15181d;
-  --panel: #1a1e24;
-  --surface: #22272f;
-  --text: #e6e8eb;
-  --muted: #8b939e;
-  --line: #2e343d;
-  --line-soft: #242930;
-  --hover: #272d36;
-  --select: #3a3220;
+  --bg: #141415;
+  --panel: #19191b;
+  --surface: #232325;
+  --raised: #2a2a2d;
+  --text: #ededed;
+  --text-2: #a1a1a6;
+  --muted: #85858b;
+  --line: rgb(237 237 237 / 0.09);
+  --line-soft: rgb(237 237 237 / 0.05);
+  --hover: rgb(237 237 237 / 0.05);
+  --select: #2a2a2d;
   --accent: #f2b544;
   --accent-text: #f2b544;
-  --mark: #5a4517;
+  --mark: #f2b544;
   --bad: #f0716a;
   --bad-bg: #3b2221;
   --scrim: rgb(0 0 0 / 0.5);
-  --shadow: 0 10px 30px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.3);
+  --shadow: 0 8px 24px rgb(0 0 0 / 0.45), 0 1px 2px rgb(0 0 0 / 0.3);
   color-scheme: dark;
 }
 
@@ -92,15 +99,20 @@ textarea {
 }
 
 button {
+  min-height: 28px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 7px;
-  padding: 5px 11px;
+  border-radius: 8px;
+  padding: 4px 12px;
   cursor: pointer;
   white-space: nowrap;
+  transition:
+    background-color 140ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 140ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 140ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 button:hover:not(:disabled) {
-  border-color: var(--accent);
+  background-color: var(--raised);
 }
 button:disabled {
   opacity: 0.45;
@@ -110,32 +122,37 @@ button.primary {
   background: var(--accent);
   border-color: var(--accent);
   color: #1c1406;
-  font-weight: 600;
+  font-weight: 500;
 }
 button.primary:hover:not(:disabled) {
-  filter: brightness(1.05);
+  background: var(--accent);
+  filter: brightness(1.06);
 }
 button.quiet {
   background: transparent;
 }
 button.icon {
+  min-height: 0;
   border: 0;
   background: transparent;
-  padding: 2px 6px;
+  padding: 4px;
+  border-radius: 6px;
   color: var(--muted);
 }
 button.icon:hover:not(:disabled) {
   color: var(--text);
+  background: var(--hover);
 }
 button.mini {
-  padding: 1px 6px;
+  min-height: 0;
+  padding: 0 6px;
   font-size: 11px;
-  border-radius: 5px;
+  border-radius: 6px;
   color: var(--muted);
 }
 button.small {
   font-size: 12px;
-  padding: 4px 9px;
+  padding: 4px 8px;
 }
 
 input:not([type="checkbox"]):not([type="radio"]),
@@ -145,8 +162,9 @@ textarea {
   min-width: 0;
   background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 5px 8px;
+  border-radius: 8px;
+  padding: 4px 8px;
+  min-height: 28px;
 }
 input:focus-visible,
 select:focus-visible,
@@ -161,7 +179,7 @@ button:focus-visible {
 }
 input[type="checkbox"],
 input[type="radio"] {
-  accent-color: var(--accent);
+  accent-color: var(--text);
   margin: 0;
 }
 
@@ -180,6 +198,10 @@ input[type="radio"] {
   height: 1px;
   overflow: hidden;
   clip: rect(0 0 0 0);
+}
+strong,
+b {
+  font-weight: 600;
 }
 code {
   font-family: var(--mono);

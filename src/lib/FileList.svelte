@@ -222,6 +222,7 @@
                   </span>{r.name}
                 {:else if c === "newName"}
                   {#if r.checked && p && p.status !== "unchanged"}
+                    <span class="arrow" aria-hidden="true">→</span>
                     {#if app.settings.highlightChanges && p.status === "changed"}
                       {@const [a, b, d] = diff(r.name, p.newName)}
                       {a}<mark>{b}</mark>{d}
@@ -406,10 +407,11 @@
   }
   .th {
     text-align: left;
-    font-size: 11.5px;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
     color: var(--muted);
-    padding: 7px 10px;
+    min-height: 32px;
+    padding: 8px 12px;
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -451,8 +453,10 @@
   .tr.sel {
     background: var(--select);
   }
+  /* Full row height, so the change underline below the text is not clipped. */
   .td {
-    padding: 0 10px;
+    padding: 0 12px;
+    line-height: 28px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -463,17 +467,20 @@
   .tr.off .td:not(.check) {
     color: var(--muted);
   }
+  /* The changed part of a new name is underlined in amber: the proofreader's insert mark. */
   .newName {
-    font-weight: 500;
+    color: var(--text);
   }
-  .changed .newName {
-    color: var(--accent-text);
+  .arrow {
+    margin-right: 8px;
+    color: var(--muted);
   }
   mark {
-    background: var(--mark);
+    background: transparent;
     color: inherit;
-    border-radius: 3px;
-    padding: 0 1px;
+    text-decoration: underline 2px var(--mark);
+    text-underline-offset: 4px;
+    text-decoration-skip-ink: none;
   }
   .conflict .newName,
   .invalid .newName {
@@ -487,8 +494,8 @@
     font-weight: 400;
   }
   .flag {
-    font-size: 10.5px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 500;
     margin-left: 6px;
     padding: 1px 5px;
     border-radius: 4px;

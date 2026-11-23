@@ -810,6 +810,40 @@ export const RULE_BY_KIND: Record<RuleKind, RuleDef> = Object.fromEntries(
   RULES.map((r) => [r.kind, r]),
 ) as Record<RuleKind, RuleDef>;
 
+/** A few words that say what a step is set to, for the step list. Empty when unset. */
+export function stepSummary(rule: Rule): string {
+  if (rule.kind === "numbering" && rule.numType === "decimal") {
+    const start = Number(rule.start ?? 1);
+    return String(start).padStart(Number(rule.pad ?? 0), "0");
+  }
+  if (rule.kind === "replace") {
+    const pairs = (rule.pairs as { find: string; with: string }[]) ?? [];
+    const first = pairs.find((p) => p.find);
+    if (!first) return "";
+    const more = pairs.filter((p) => p.find).length - 1;
+    return `${first.find} → ${first.with}${more > 0 ? ` +${more}` : ""}`;
+  }
+  const flat = (fields: Field[]): Field[] =>
+    fields.flatMap((f) =>
+      "show" in f && f.show && !f.show(rule)
+        ? []
+        : f.type === "row"
+          ? flat(f.fields)
+          : [f],
+    );
+  const fields = flat(RULE_BY_KIND[rule.kind]?.fields ?? []);
+  for (const f of fields)
+    if (
+      (f.type === "text" || f.type === "area") &&
+      String(rule[f.key] ?? "").trim()
+    )
+      return String(rule[f.key]).trim().split("\n")[0];
+  for (const f of fields)
+    if (f.type === "select")
+      return f.options.find(([v]) => v === rule[f.key])?.[1] ?? "";
+  return "";
+}
+
 /** Tags offered by the tag picker, grouped. */
 export const TAG_GROUPS: { group: string; tags: [string, string][] }[] = [
   {

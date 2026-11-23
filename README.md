@@ -6,7 +6,7 @@ Alterix renames many files at once, shows each new name before anything changes,
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/main-dark.png">
-  <img src="assets/screenshots/main-light.png" alt="Alterix with a holiday photo folder open: the file list shows each new name, such as Lisbon 001.jpg, next to the old one, and the Steps panel shows Name, Numbers and Extension" width="840">
+  <img src="assets/screenshots/main-light.png" alt="Alterix with a holiday photo folder open: the step list shows Name, Numbers and Extension, the Name step is open beside it, and the file list shows each new name, such as Lisbon 001.jpg, next to the old one" width="840">
 </picture>
 
 ## What it does
@@ -15,16 +15,16 @@ Alterix is a free renamer for Windows, macOS and Linux. Every renaming tool you 
 
 ### See every new name first
 
-The list shows each file's new name as you type. Changed text is highlighted. Names that clash, or that would break on another system, are marked before you rename.
+The list shows each file's new name as you type. The changed part is underlined. Names that clash, or that would break on another system, are marked before you rename.
 
 ### Build names from simple steps
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/add-step-dark.png">
-  <img src="assets/screenshots/add-step-light.png" alt="The Add step menu in Alterix, listing steps such as Replace text, Regular expression, Remove, Add and Change case" width="840">
+  <img src="assets/screenshots/add-step-light.png" alt="Add a step in Alterix, listing steps such as Replace text, Regular expression, Remove, Add and Change case" width="840">
 </picture>
 
-Add steps such as **Replace text**, **Remove**, **Add**, **Change case**, **Numbers**, **Date** and **Folder name**. Steps run from top to bottom. Drag a step to change the order, or switch it off to see the difference.
+Add steps such as **Replace text**, **Remove**, **Add**, **Change case**, **Numbers**, **Date** and **Folder name**. Steps run from top to bottom. Select a step in the list to change its settings. Drag a step to change the order, or switch it off to see the difference.
 
 ### Use what is inside your files
 
@@ -48,10 +48,10 @@ Every rename goes into **History**. Select **Undo** to put the old names back, e
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/filters-dark.png">
-  <img src="assets/screenshots/filters-light.png" alt="The Filters bar in Alterix, showing names matching *.jpg *.heic *.mov, with options for folders, hidden items and subfolders" width="840">
+  <img src="assets/screenshots/filters-light.png" alt="Filters in Alterix, showing names matching *.jpg *.heic *.mov, with options for folders, hidden items and subfolders" width="840">
 </picture>
 
-Show only some files with masks such as `*.jpg !*_old.*`. Include subfolders, hidden files or folders. Tick or untick each item to decide what is renamed.
+Select **Filters** at the bottom of the step list. Show only some files with masks such as `*.jpg !*_old.*`. Include subfolders, hidden files or folders. Tick or untick each item to decide what is renamed.
 
 ### Move, copy and tidy at the same time
 
@@ -60,7 +60,7 @@ Show only some files with masks such as `*.jpg !*_old.*`. Include subfolders, hi
   <img src="assets/screenshots/after-renaming-light.png" alt="The After renaming section in Alterix: copy to /Users/alex/Pictures/Sorted, attributes and timestamps" width="840">
 </picture>
 
-Copy or move renamed files to another folder. Set file dates and attributes in the same run.
+Select **After renaming** at the bottom of the step list. Copy or move renamed files to another folder. Set file dates and attributes in the same run.
 
 ### Save your recipes
 
@@ -118,11 +118,14 @@ You can run this instead:
 ### Rename files
 
 1. Select **Open folder…** and choose a folder. You can also drop files or folders onto the window.
-2. Select **+ Add step** and choose a step, for example **Replace text**.
-3. Fill in the step. The **New name** column updates as you type.
-4. Add more steps if you need them. Drag a step by its handle to change the order.
+2. In the step list, select **+ Add step** and choose a step, for example **Replace text**.
+3. Fill in the step in the editor beside the list. The **New name** column updates as you type.
+4. Add more steps if you need them. Drag a step in the list to change the order.
 5. Untick any item you want to leave as it is.
-6. Select **Rename**.
+6. Select **Rename** at the top right of the window.
+
+> [!NOTE]
+> Press F9 to hide the step editor and give the file list more room. Select any step to show the editor again.
 
 > [!TIP]
 > Select an item and press F2 to rename just that item by hand.

@@ -2,21 +2,23 @@
 
 :root {
   /* Light theme: src/app.css :root */
-  --bg: #fbfaf8;
-  --panel: #f4f2ee;
+  --bg: #ffffff;
+  --panel: #f7f7f8;
   --surface: #ffffff;
-  --text: #1c2129;
-  --muted: #6b7280;
-  --line: #e2ded7;
-  --line-soft: #efece7;
-  --select: #fbefd6;
+  --raised: #ececee;
+  --text: #171717;
+  --text-2: #525252;
+  --muted: #6e6e73;
+  --line: rgb(23 23 23 / 0.1);
+  --line-soft: rgb(23 23 23 / 0.06);
+  --select: #ececee;
   --accent: #c98a12;
   --accent-text: #8a5a00;
-  --mark: #f8e2b0;
+  --mark: #c98a12;
   --bad: #c2413a;
   --bad-bg: #fbe7e5;
   /* Page-only */
-  --page: #f4f2ee;
+  --page: #f4f4f5;
   --btn-text: #1c1406;
   --shadow: 0 24px 60px rgb(30 25 15 / 0.12), 0 2px 8px rgb(30 25 15 / 0.06);
 
@@ -36,20 +38,22 @@
 @media (prefers-color-scheme: dark) {
   :root {
     /* Dark theme: src/app.css dark block */
-    --bg: #15181d;
-    --panel: #1a1e24;
-    --surface: #22272f;
-    --text: #e6e8eb;
-    --muted: #8b939e;
-    --line: #2e343d;
-    --line-soft: #242930;
-    --select: #3a3220;
+    --bg: #141415;
+    --panel: #19191b;
+    --surface: #232325;
+    --raised: #2a2a2d;
+    --text: #ededed;
+    --text-2: #a1a1a6;
+    --muted: #85858b;
+    --line: rgb(237 237 237 / 0.09);
+    --line-soft: rgb(237 237 237 / 0.05);
+    --select: #2a2a2d;
     --accent: #f2b544;
     --accent-text: #f2b544;
-    --mark: #5a4517;
+    --mark: #f2b544;
     --bad: #f0716a;
     --bad-bg: #3b2221;
-    --page: #111317;
+    --page: #0f0f10;
     --shadow: 0 24px 60px rgb(0 0 0 / 0.5), 0 2px 8px rgb(0 0 0 / 0.3);
     color-scheme: dark;
   }
@@ -280,7 +284,8 @@ h1 {
 .w-toolbar {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
+  background: var(--panel);
   padding: 0 12px 0 16px;
   border-bottom: 1px solid var(--line);
   min-width: 0;
@@ -289,6 +294,7 @@ h1 {
 .w-title {
   font-weight: 600;
   flex: none;
+  margin-right: 8px;
 }
 .w-ver {
   display: inline-block;
@@ -305,27 +311,25 @@ h1 {
 }
 .w-tools {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
   flex: none;
 }
 .w-btn {
-  padding: 4px 10px;
+  padding: 4px 12px;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: 8px;
   background: var(--surface);
 }
-.w-btn.w-on {
-  border-color: var(--accent);
-}
+/* Three columns, as in the app: step list, step editor, file list. */
 .w-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
+  grid-template-columns: 184px 232px minmax(0, 1fr);
   min-height: 0;
 }
 .w-list {
   min-width: 0;
   overflow: hidden;
-  border-right: 1px solid var(--line);
 }
 .w-row {
   display: grid;
@@ -335,7 +339,9 @@ h1 {
   padding-right: 16px;
   white-space: nowrap;
 }
+/* Full row height, so the change underline below the text is not clipped. */
 .w-row > span {
+  line-height: var(--row);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -366,14 +372,24 @@ h1 {
   font-family: var(--mono);
   font-size: 12px;
 }
-.c-new mark {
-  background: var(--mark);
+/* The changed part of a new name is underlined in amber: the proofreader's insert mark. */
+.c-new mark,
+.prow mark,
+.trow mark,
+.hrow mark {
+  background: transparent;
   color: inherit;
-  border-radius: 3px;
+  text-decoration: underline 2px var(--mark);
+  text-underline-offset: 4px;
+  text-decoration-skip-ink: none;
+}
+.c-new .arrow {
+  margin-right: 8px;
+  color: var(--muted);
 }
 .w-row.changed .c-new,
 .chg {
-  color: var(--accent-text);
+  color: var(--text);
 }
 .w-row.off {
   color: var(--muted);
@@ -410,8 +426,8 @@ h1 {
     border-color 0.2s var(--ease);
 }
 .box.on {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--text);
+  border-color: var(--text);
 }
 .box.on::after {
   content: "";
@@ -420,13 +436,13 @@ h1 {
   top: 1px;
   width: 4px;
   height: 8px;
-  border: solid var(--btn-text);
+  border: solid var(--bg);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
 .box-mixed {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--text);
+  border-color: var(--text);
 }
 .box-mixed::after {
   content: "";
@@ -435,72 +451,108 @@ h1 {
   right: 3px;
   top: 6px;
   height: 2px;
-  background: var(--btn-text);
+  background: var(--bg);
 }
 
-.w-steps {
+.w-rail,
+.w-editor {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px;
   min-width: 0;
   overflow: hidden;
   background: var(--panel);
+  border-right: 1px solid var(--line);
 }
-.w-steps-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-weight: 600;
-  padding: 0 4px 4px;
+.w-rail {
+  gap: 2px;
+  padding: 12px 8px;
 }
-.w-steps-head .muted {
-  font-weight: 400;
-  font-size: 12px;
+.w-rail-head {
+  padding: 4px 8px 8px;
+  color: var(--text-2);
+  font-weight: 500;
 }
-.step {
-  padding: 10px 12px 12px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  transition:
-    border-color 0.2s var(--ease),
-    opacity 0.2s var(--ease);
-}
-.step.focus {
-  border-color: var(--accent);
-}
-.step.disabled .step-field {
-  opacity: 0.45;
-}
-.step-head {
+.ritem {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 20px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+  transition: background-color 0.2s var(--ease);
 }
-.grip,
-.num {
+.ritem.sel {
+  background: var(--raised);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.ritem.off .rname {
   color: var(--muted);
-  font-size: 12px;
 }
-.step-name {
+.rsum {
   flex: 1;
-  font-weight: 600;
+  min-width: 0;
+  text-align: right;
+  font-size: 12px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.step-field {
+.radd {
+  color: var(--text-2);
+}
+.w-rail-foot {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.w-editor {
+  padding: 12px 16px;
+}
+.ehead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+}
+.ename {
+  flex: 1;
+  font-weight: 500;
+}
+.eon {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.efields {
   margin-top: 8px;
   transition: opacity 0.2s var(--ease);
 }
-.step-field.split {
+.efields.disabled {
+  opacity: 0.5;
+}
+.efield {
+  margin-bottom: 12px;
+  min-width: 0;
+}
+.split {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 64px;
   gap: 8px;
 }
+.num {
+  width: 16px;
+  flex: none;
+  text-align: right;
+  color: var(--muted);
+  font: 12px var(--mono);
+}
 .flabel {
   display: block;
-  font-size: 11px;
-  color: var(--muted);
+  font-size: 12px;
+  color: var(--text-2);
   margin-bottom: 4px;
 }
 .input {
@@ -509,7 +561,7 @@ h1 {
   line-height: 26px;
   padding: 0 8px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--bg);
   white-space: nowrap;
   overflow: hidden;
@@ -523,13 +575,6 @@ h1 {
   margin-left: 1px;
   vertical-align: -2px;
   background: var(--text);
-}
-.add-step {
-  padding: 6px;
-  text-align: center;
-  color: var(--muted);
-  border: 1px dashed var(--line);
-  border-radius: 10px;
 }
 .w-status {
   display: flex;
@@ -562,13 +607,15 @@ h1 {
 }
 .w-rename {
   flex: none;
-  width: 96px;
+  width: 92px;
+  margin-left: 8px;
   text-align: center;
-  padding: 6px 0;
+  padding: 4px 0;
+  border: 1px solid var(--accent);
   border-radius: 8px;
   background: var(--accent);
   color: var(--btn-text);
-  font-weight: 600;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
   transition:
     transform 0.12s var(--ease),
@@ -683,7 +730,7 @@ h1 {
 .pstep input {
   grid-row: 1 / 3;
   margin: 0;
-  accent-color: var(--accent);
+  accent-color: var(--text);
   width: 15px;
   height: 15px;
 }
@@ -739,13 +786,6 @@ h1 {
 #pipe-rows {
   height: 200px;
 }
-.prow mark,
-.trow mark,
-.hrow mark {
-  background: var(--mark);
-  color: inherit;
-  border-radius: 3px;
-}
 
 .tags,
 .hist {
@@ -776,7 +816,7 @@ h1 {
 }
 .tag-field .input {
   font-size: 12px;
-  color: var(--accent-text);
+  color: var(--text);
 }
 .tag-rows {
   margin-top: 12px;
@@ -1044,6 +1084,12 @@ h1 {
   .c-date {
     display: none;
   }
+  .w-body {
+    grid-template-columns: 184px minmax(0, 1fr);
+  }
+  .w-editor {
+    display: none;
+  }
   .panel-wide {
     grid-template-columns: minmax(0, 1fr);
     gap: 24px;
@@ -1067,11 +1113,8 @@ h1 {
   .w-body {
     grid-template-columns: minmax(0, 1fr);
   }
-  .w-steps {
+  .w-rail {
     display: none;
-  }
-  .w-list {
-    border-right: 0;
   }
 }
 
@@ -1132,6 +1175,7 @@ h1 {
   }
   .w-rename {
     width: 84px;
+    margin-left: 0;
   }
   .features,
   .download {

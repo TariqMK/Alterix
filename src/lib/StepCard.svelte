@@ -1,4 +1,5 @@
-<!-- One pipeline step, drawn from its catalogue entry: header controls and its fields. -->
+<!-- The editor for one step, drawn from its catalogue entry: on/off, duplicate, remove
+     and its fields. -->
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
   import { open } from "@tauri-apps/plugin-dialog";
@@ -153,7 +154,7 @@
               onclick={() =>
                 (step.rule.pairs = pairs.filter((_, j) => j !== i))}
             >
-              −
+              <Icon name="close" />
             </button>
           </div>
         {/each}
@@ -175,25 +176,13 @@
   aria-labelledby={uid}
 >
   <header>
-    <span class="grip" title="Drag to reorder" aria-hidden="true">
-      <Icon name="grip" size={12} />
-    </span>
-    <span class="num">{index + 1}</span>
-    <button
-      class="title"
-      id={uid}
-      title={def.summary}
-      onclick={() => (step.collapsed = !step.collapsed)}
-      aria-expanded={!step.collapsed}
-    >
-      {def.label}
-    </button>
+    <h2 id={uid}><span class="num">{index + 1}</span>{def.label}</h2>
     <label
       class="switch"
       title={step.enabled ? "Turn this step off" : "Turn this step on"}
     >
       <input type="checkbox" bind:checked={step.enabled} />
-      <span class="sr">Enabled</span>
+      <span>{step.enabled ? "On" : "Off"}</span>
     </label>
     <button
       class="icon"
@@ -201,7 +190,7 @@
       aria-label="Duplicate step"
       onclick={onduplicate}
     >
-      <Icon name="duplicate" size={13} />
+      <Icon name="duplicate" />
     </button>
     <button
       class="icon"
@@ -209,76 +198,82 @@
       aria-label="Remove step"
       onclick={onremove}
     >
-      ✕
+      <Icon name="close" />
     </button>
   </header>
+  <p class="about">{def.summary}</p>
   {#if problem}<p class="problem">{problem}</p>{/if}
-  {#if !step.collapsed}
-    <div class="fields">
-      {#each def.fields as f, i (i)}{@render field(f)}{/each}
-      {#if prompts.length}
-        <div class="prompts">
-          <p class="note">This script asks for:</p>
-          {#each prompts as p (p)}
-            <label class="sel">
-              <span>{p}</span>
-              <input
-                bind:value={
-                  () => app.options.scriptAnswers[p] ?? "",
-                  (v) => (app.options.scriptAnswers[p] = v)
-                }
-                placeholder="Default value"
-              />
-            </label>
-          {/each}
-        </div>
-      {/if}
-    </div>
-  {/if}
+  <div class="fields">
+    {#each def.fields as f, i (i)}{@render field(f)}{/each}
+    {#if prompts.length}
+      <div class="prompts">
+        <p class="note">This script asks for:</p>
+        {#each prompts as p (p)}
+          <label class="sel">
+            <span>{p}</span>
+            <input
+              bind:value={
+                () => app.options.scriptAnswers[p] ?? "",
+                (v) => (app.options.scriptAnswers[p] = v)
+              }
+              placeholder="Default value"
+            />
+          </label>
+        {/each}
+      </div>
+    {/if}
+  </div>
 </article>
 
 <style>
   .card {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 8px 10px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
   .card.off .fields,
-  .card.off .title {
+  .card.off h2 {
     opacity: 0.5;
-  }
-  .card.bad {
-    border-color: var(--bad);
   }
   header {
     display: flex;
     align-items: center;
     gap: 4px;
+    min-height: 28px;
   }
-  .grip {
-    cursor: grab;
-    color: var(--muted);
-    padding: 0 2px;
+  h2 {
+    flex: 1;
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
   }
   .num {
-    font: 600 11px/18px var(--mono);
+    font: 12px var(--mono);
     color: var(--muted);
-    min-width: 16px;
-    text-align: center;
   }
-  .title {
-    flex: 1;
-    border: 0;
-    background: transparent;
-    padding: 2px 0;
-    text-align: left;
-    font-weight: 600;
+  .switch {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 4px;
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  .about {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .card.bad h2 {
+    color: var(--bad);
   }
   .fields {
     display: grid;
-    gap: 8px;
-    margin-top: 8px;
+    gap: 12px;
+    margin-top: 12px;
   }
   .row {
     display: flex;
@@ -306,7 +301,7 @@
     display: grid;
     gap: 4px;
     font-size: 12px;
-    color: var(--muted);
+    color: var(--text-2);
   }
   .check {
     display: flex;
@@ -317,7 +312,7 @@
   }
   .note {
     margin: 0;
-    font-size: 11.5px;
+    font-size: 12px;
     color: var(--muted);
   }
   .problem {

@@ -289,10 +289,6 @@ async function main() {
     await page
       .getByLabel("Folder (absolute, or relative such as .. or Sorted)")
       .fill("/Users/alex/Pictures/Sorted");
-    await page
-      .locator(".after .pipeline, .pipeline")
-      .first()
-      .evaluate((el) => el.scrollTo(0, el.scrollHeight));
     await shot("after-renaming");
 
     await fresh();

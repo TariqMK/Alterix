@@ -82,7 +82,7 @@
     flex: 1;
     margin: 0;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
   }
   .body {
     padding: 4px 18px 16px;

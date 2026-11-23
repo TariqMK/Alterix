@@ -603,11 +603,7 @@
               >
                 Undo script…
               </button>
-              <button
-                class="primary"
-                disabled={b.undone}
-                onclick={() => app.undo(b.id)}
-              >
+              <button disabled={b.undone} onclick={() => app.undo(b.id)}>
                 Undo
               </button>
             </div>
@@ -922,7 +918,7 @@
   h3 {
     margin: 10px 0 0;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
   }
   .check {
     display: flex;
@@ -966,7 +962,7 @@
     font-family: var(--mono);
   }
   .strong {
-    font-weight: 600;
+    font-weight: 500;
   }
   .hist {
     list-style: none;

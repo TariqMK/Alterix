@@ -1,48 +1,67 @@
-<!-- The rename pipeline: ordered steps (drag to reorder), the add-step menu and the
-     "after renaming" settings: new location, attributes and timestamps. -->
+<!-- The step list (ordered steps, drag to reorder, Filters and After renaming) and the
+     editor column beside it, which shows whichever item is selected in the list. -->
 <script lang="ts">
   import { open } from "@tauri-apps/plugin-dialog";
-  import { RULES, type RuleKind } from "./catalog";
+  import { RULE_BY_KIND, RULES, type RuleKind, stepSummary } from "./catalog";
   import Field from "./Field.svelte";
+  import FiltersBar from "./FiltersBar.svelte";
+  import Icon from "./Icon.svelte";
   import { app } from "./state.svelte";
   import StepCard from "./StepCard.svelte";
   import type { StampSet, Tri } from "./types";
 
-  let adding = $state(false);
+  /** What the editor shows: a step (by id), Filters, After renaming or the step catalogue. */
+  type Pick = number | "filters" | "after" | "add";
+  // What was last chosen. When it is missing (startup, a removed step, a preset opened),
+  // the editor shows the first step, or the step catalogue when there are none.
+  let chosen = $state<Pick | null>(null);
+  const pick = $derived<Pick>(
+    chosen !== null &&
+      (typeof chosen !== "number" || app.steps.some((s) => s.id === chosen))
+      ? chosen
+      : (app.steps[0]?.id ?? "add"),
+  );
   let dragFrom = $state<number | null>(null);
   let dragOver = $state<number | null>(null);
-  let showAfter = $state(false);
 
   const groups = [...new Set(RULES.map((r) => r.group))];
+  const editorOpen = $derived(!app.settings.wideList);
+  const pickedIndex = $derived(
+    typeof pick === "number" ? app.steps.findIndex((s) => s.id === pick) : -1,
+  );
 
-  let adder: HTMLDivElement | undefined = $state();
-
-  function add(kind: RuleKind) {
-    app.steps.push(app.newStep(kind));
-    adding = false;
+  function show(p: Pick) {
+    chosen = p;
+    if (!editorOpen) {
+      app.settings.wideList = false;
+      app.saveSettings();
+    }
   }
 
-  $effect(() => {
-    if (adding)
-      queueMicrotask(() => {
-        // Scroll only the steps panel, never the window.
-        const panel = adder?.closest(".pipeline") as HTMLElement | null;
-        if (panel && adder)
-          panel.scrollTo({ top: adder.offsetTop - 12, behavior: "smooth" });
-      });
-  });
+  function add(kind: RuleKind) {
+    const s = app.newStep(kind);
+    app.steps.push(s);
+    chosen = s.id;
+  }
 
-  function drop(to: number) {
-    if (dragFrom === null || dragFrom === to) return;
-    const [s] = app.steps.splice(dragFrom, 1);
-    app.steps.splice(to > dragFrom ? to - 1 : to, 0, s);
-    dragFrom = dragOver = null;
+  function remove(i: number) {
+    const next = app.steps[i + 1] ?? app.steps[i - 1];
+    app.steps.splice(i, 1);
+    chosen = next?.id ?? null;
   }
 
   function duplicate(i: number) {
     const copy = app.newStep(app.steps[i].rule.kind);
     copy.rule = JSON.parse(JSON.stringify(app.steps[i].rule));
     app.steps.splice(i + 1, 0, copy);
+    chosen = copy.id;
+  }
+
+  function drop(to: number) {
+    if (dragFrom === null || dragFrom === to) return;
+    const [s] = app.steps.splice(dragFrom, 1);
+    app.steps.splice(to > dragFrom ? to - 1 : to, 0, s);
+    dragFrom = dragOver = null;
   }
 
   async function pickLocation() {
@@ -62,6 +81,24 @@
         app.options.timestamps.accessed,
       ].some((s) => s.mode !== "keep" || s.delta),
   );
+  const afterSummary = $derived(
+    app.options.newLocation.trim()
+      ? `${app.options.copy ? "Copy" : "Move"} to ${app.options.newLocation.trim().split(/[\\/]/).pop()}`
+      : afterActive
+        ? "On"
+        : "Off",
+  );
+  const filtersSummary = $derived.by(() => {
+    const f = app.filters;
+    const mask = f.mask.trim();
+    const parts = [mask && mask !== "*" ? mask : ""];
+    if (f.subfolders) parts.push("subfolders");
+    if (f.hidden) parts.push("hidden");
+    if (f.folders && !f.files) parts.push("folders only");
+    else if (f.folders) parts.push("+ folders");
+    if (f.condition.trim()) parts.push("script");
+    return parts.filter(Boolean).join(", ") || "All files";
+  });
 
   const TRI: [Tri, string][] = [
     ["keep", "Keep"],
@@ -83,36 +120,30 @@
   ];
 </script>
 
-<aside class="pipeline" aria-label="Rename steps">
-  <div class="head">
+<nav class="rail" aria-label="Rename steps">
+  <div class="rail-head">
     <h2>Steps</h2>
-    <span class="muted small">
-      {app.steps.length ? "Run top to bottom" : ""}
-    </span>
+    <button
+      class="icon"
+      title="{editorOpen ? 'Hide' : 'Show'} the step editor (F9)"
+      aria-label="{editorOpen ? 'Hide' : 'Show'} the step editor"
+      aria-pressed={editorOpen}
+      onclick={() => (
+        (app.settings.wideList = !app.settings.wideList),
+        app.saveSettings()
+      )}
+    >
+      <Icon name="panel" />
+    </button>
   </div>
 
-  {#if !app.steps.length}
-    <div class="empty">
-      <p>Add a step to start building new names.</p>
-      <p class="muted small">
-        Steps run in order. Drag a step to change the order.
-      </p>
-    </div>
-  {/if}
-
-  <div class="list">
+  <ol class="steps">
     {#each app.steps as step, i (step.id)}
-      <div
+      <li
         class="slot"
         class:over={dragOver === i && dragFrom !== null && dragFrom !== i}
-        role="listitem"
         draggable="true"
         ondragstart={(e) => {
-          const t = e.target as HTMLElement;
-          if (!t.closest(".grip") && !(t instanceof HTMLDivElement)) {
-            e.preventDefault();
-            return;
-          }
           dragFrom = i;
           e.dataTransfer?.setData("text/plain", String(i));
         }}
@@ -127,19 +158,28 @@
         }}
         ondragend={() => (dragFrom = dragOver = null)}
       >
-        <StepCard
-          bind:step={app.steps[i]}
-          index={i}
-          onremove={() => app.steps.splice(i, 1)}
-          onduplicate={() => duplicate(i)}
-        />
-      </div>
+        <button
+          class="item"
+          class:on={pick === step.id && editorOpen}
+          class:off={!step.enabled}
+          aria-current={pick === step.id ? "true" : undefined}
+          title="{RULE_BY_KIND[step.rule.kind].label}{step.enabled
+            ? ''
+            : ' (off)'}. Drag to change the order."
+          onclick={() => show(step.id)}
+        >
+          <span class="num">{i + 1}</span>
+          <span class="label">{RULE_BY_KIND[step.rule.kind].label}</span>
+          <span class="sum">
+            {step.enabled ? stepSummary(step.rule) : "Off"}
+          </span>
+        </button>
+      </li>
     {/each}
     {#if dragFrom !== null}
-      <div
+      <li
         class="endzone"
         class:over={dragOver === app.steps.length}
-        role="listitem"
         ondragover={(e) => {
           e.preventDefault();
           dragOver = app.steps.length;
@@ -148,44 +188,64 @@
           e.preventDefault();
           drop(app.steps.length);
         }}
-      ></div>
+      ></li>
     {/if}
-  </div>
+  </ol>
+  <button
+    class="item add"
+    class:on={pick === "add" && editorOpen}
+    onclick={() => show("add")}
+  >
+    <span class="num">+</span><span class="label">Add step</span>
+  </button>
 
-  <div class="adder" bind:this={adder}>
+  <div class="rail-foot">
     <button
-      class="add"
-      onclick={() => (adding = !adding)}
-      aria-expanded={adding}
+      class="item"
+      class:on={pick === "filters" && editorOpen}
+      onclick={() => show("filters")}
     >
-      + Add step
+      <span class="label">Filters</span>
+      <span class="sum">{filtersSummary}</span>
     </button>
-    {#if adding}
-      <div class="menu" role="menu">
+    <button
+      class="item"
+      class:on={pick === "after" && editorOpen}
+      onclick={() => show("after")}
+    >
+      <span class="label">After renaming</span>
+      <span class="sum">{afterSummary}</span>
+    </button>
+  </div>
+</nav>
+
+{#if editorOpen}
+  <section class="editor" aria-label="Step editor">
+    {#if pick === "add"}
+      <div class="head">
+        <h2>Add a step</h2>
+      </div>
+      <p class="hint">
+        Steps run from top to bottom. Each one changes the name the step before
+        it made.
+      </p>
+      <div class="catalogue">
         {#each groups as g (g)}
-          <div class="group">{g}</div>
+          <h3>{g}</h3>
           {#each RULES.filter((r) => r.group === g) as r (r.kind)}
-            <button class="item" role="menuitem" onclick={() => add(r.kind)}>
-              <strong>{r.label}</strong>
-              <span>{r.summary}</span>
+            <button class="kind" onclick={() => add(r.kind)}>
+              <span class="kind-label">{r.label}</span>
+              <span class="kind-sum">{r.summary}</span>
             </button>
           {/each}
         {/each}
       </div>
-    {/if}
-  </div>
-
-  <section class="after">
-    <button
-      class="section"
-      onclick={() => (showAfter = !showAfter)}
-      aria-expanded={showAfter}
-    >
-      <span>{showAfter ? "▾" : "▸"} After renaming</span>
-      {#if afterActive}<span class="badge">On</span>{/if}
-    </button>
-    {#if showAfter}
-      <div class="after-body">
+    {:else if pick === "filters"}
+      <div class="head"><h2>Filters</h2></div>
+      <FiltersBar />
+    {:else if pick === "after"}
+      <div class="head"><h2>After renaming</h2></div>
+      <div class="after">
         <h3>New location</h3>
         <div class="loc">
           <Field
@@ -209,7 +269,7 @@
         </div>
 
         <h3>Attributes</h3>
-        <div class="grid4">
+        <div class="grid2">
           {#each [["readOnly", "Read-only"], ["hidden", "Hidden"], ["system", "System"], ["archive", "Archive"]] as [k, label] (k)}
             <label class="sel">
               <span>{label}</span>
@@ -225,7 +285,7 @@
             </label>
           {/each}
         </div>
-        <p class="muted small">
+        <p class="hint">
           System and Archive apply on Windows only. Hidden works on Windows and
           macOS.
         </p>
@@ -233,7 +293,7 @@
         <h3>Timestamps</h3>
         {#each stamps as [k, label] (k)}
           {@const s = app.options.timestamps[k] as StampSet}
-          <div class="stamp">
+          <div class="grid2">
             <label class="sel">
               <span>{label}</span>
               <select bind:value={s.mode}>
@@ -244,75 +304,90 @@
                   </option>{/each}
               </select>
             </label>
-            {#if s.mode === "set"}
-              <label class="sel">
-                <span>Date and time</span><input
-                  bind:value={s.value}
-                  placeholder="2024-06-14 09:30:00"
-                />
-              </label>
-            {/if}
             <label class="sel">
               <span>Shift by</span><input
                 bind:value={s.delta}
                 placeholder="+1 02:00:00"
               />
             </label>
+            {#if s.mode === "set"}
+              <label class="sel wide">
+                <span>Date and time</span><input
+                  bind:value={s.value}
+                  placeholder="2024-06-14 09:30:00"
+                />
+              </label>
+            {/if}
           </div>
         {/each}
-        <label class="sel inc">
+        <label class="sel half">
           <span>Add per file (seconds)</span>
           <input
             type="number"
             bind:value={app.options.timestamps.incrementSeconds}
           />
         </label>
-        <p class="muted small">Created cannot be changed on Linux.</p>
+        <p class="hint">Created cannot be changed on Linux.</p>
       </div>
+    {:else if pickedIndex >= 0}
+      {#key app.steps[pickedIndex].id}
+        <StepCard
+          bind:step={app.steps[pickedIndex]}
+          index={pickedIndex}
+          onremove={() => remove(pickedIndex)}
+          onduplicate={() => duplicate(pickedIndex)}
+        />
+      {/key}
     {/if}
   </section>
-</aside>
+{/if}
 
 <style>
-  .pipeline {
-    position: relative;
-    border-left: 1px solid var(--line);
-    background: var(--panel);
-    padding: 12px;
-    overflow: auto;
+  .rail {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    min-height: 0;
     min-width: 0;
+    padding: 12px 8px;
+    gap: 2px;
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+    overflow: auto;
   }
+  .rail-head,
   .head {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
+    min-height: 28px;
+  }
+  .rail-head {
+    padding: 0 0 4px 8px;
   }
   h2 {
     margin: 0;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
+  }
+  .rail h2 {
+    color: var(--text-2);
   }
   h3 {
-    margin: 10px 0 6px;
+    margin: 16px 0 8px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
+    color: var(--text-2);
   }
-  .empty {
-    padding: 18px 8px;
-    text-align: center;
-    border: 1px dashed var(--line);
-    border-radius: 10px;
+  h3:first-child {
+    margin-top: 0;
   }
-  .empty p {
-    margin: 4px 0;
-  }
-  .list {
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 2px;
   }
   .slot {
     border-top: 2px solid transparent;
@@ -326,97 +401,154 @@
     height: 24px;
     border-top: 2px solid transparent;
   }
-  .adder {
-    position: relative;
-  }
-  .add {
-    width: 100%;
-    padding: 7px;
-    border-style: dashed;
-    background: transparent;
-  }
-  .menu {
-    margin-top: 6px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    box-shadow: var(--shadow);
-    padding: 4px;
-  }
-  .group {
-    font-size: 11px;
-    color: var(--muted);
-    padding: 8px 8px 2px;
-  }
   .item {
-    display: grid;
-    gap: 1px;
-    white-space: normal;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     width: 100%;
-    text-align: left;
+    height: 32px;
+    padding: 0 8px;
     border: 0;
+    border-radius: 8px;
     background: transparent;
-    padding: 6px 8px;
+    text-align: left;
+    color: var(--text);
   }
-  .item:hover,
-  .item:focus-visible {
+  .item:hover:not(.on) {
     background: var(--hover);
   }
-  .item span {
-    font-size: 11.5px;
+  .item.on {
+    background: var(--raised);
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .item.off .label {
     color: var(--muted);
   }
-  .section {
+  .slot[draggable="true"] .item {
+    cursor: grab;
+  }
+  .num {
+    width: 16px;
+    flex: none;
+    text-align: right;
+    font: 12px var(--mono);
+    color: var(--muted);
+  }
+  .label {
+    flex: none;
+  }
+  .sum {
+    flex: 1;
+    min-width: 0;
+    text-align: right;
+    color: var(--muted);
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .add {
+    color: var(--text-2);
+  }
+  .add .num {
+    font-family: inherit;
+    font-size: 14px;
+  }
+  .rail-foot {
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
     display: flex;
-    justify-content: space-between;
-    width: 100%;
-    border: 0;
-    background: transparent;
-    padding: 6px 0;
-    font-weight: 600;
+    flex-direction: column;
+    gap: 2px;
   }
-  .badge {
-    font-size: 11px;
-    color: var(--accent-text);
+
+  .editor {
+    min-height: 0;
+    min-width: 0;
+    overflow: auto;
+    padding: 12px 16px 24px;
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
-  .after-body {
+  .hint {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .catalogue {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .catalogue h3 {
+    margin: 12px 0 4px 8px;
+  }
+  .catalogue h3:first-child {
+    margin-top: 0;
+  }
+  .kind {
     display: grid;
-    gap: 6px;
+    gap: 2px;
+    width: 100%;
+    padding: 8px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    text-align: left;
+    white-space: normal;
+  }
+  .kind:hover,
+  .kind:focus-visible {
+    background: var(--hover);
+  }
+  .kind-sum {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .after {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .after h3 {
+    margin: 8px 0 0;
   }
   .loc {
     display: grid;
     grid-template-columns: 1fr auto;
-    gap: 6px;
+    gap: 8px;
     align-items: end;
   }
   .checks {
     display: flex;
-    gap: 14px;
+    gap: 16px;
     flex-wrap: wrap;
   }
   .check {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     font-size: 12px;
   }
-  .grid4 {
+  .grid2 {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
   .sel {
     display: grid;
     gap: 4px;
     font-size: 12px;
-    color: var(--muted);
+    color: var(--text-2);
   }
-  .stamp {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
+  .wide {
+    grid-column: span 2;
   }
-  .inc {
+  .half {
     max-width: 50%;
   }
 </style>

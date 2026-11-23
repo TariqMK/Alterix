@@ -106,17 +106,48 @@
               <span class="w-title"
                 >Alterix <span class="w-ver" id="w-ver">v1.0.0</span></span
               >
+              <span class="w-tools hide-md">
+                <span class="w-btn">Open folder…</span>
+                <span class="w-btn">Add files…</span>
+              </span>
               <span class="w-path">/Users/alex/Pictures/Holiday 2025</span>
               <span class="w-tools">
-                <span class="w-btn hide-md">Open folder…</span>
-                <span class="w-btn hide-md">Add files…</span>
-                <span class="w-btn w-on">Filters ▾</span>
                 <span class="w-btn hide-sm">List ▾</span>
                 <span class="w-btn hide-sm">Presets ▾</span>
-                <span class="w-btn">History</span>
+                <span class="w-btn hide-sm">History</span>
+                <span class="w-rename" id="w-rename">Rename 9</span>
               </span>
             </div>
             <div class="w-body">
+              <div class="w-rail">
+                <div class="w-rail-head">Steps</div>
+                <div class="ritem" data-step="name">
+                  <span class="num">1</span><span class="rname">Name</span
+                  ><span class="rsum" id="w-sum-name">Lisbon</span>
+                </div>
+                <div class="ritem" data-step="numbers">
+                  <span class="num">2</span><span class="rname">Numbers</span
+                  ><span class="rsum">001</span>
+                </div>
+                <div class="ritem" data-step="ext">
+                  <span class="num">3</span><span class="rname">Extension</span
+                  ><span class="rsum">lower case</span>
+                </div>
+                <div class="ritem radd">
+                  <span class="num">+</span><span class="rname">Add step</span>
+                </div>
+                <div class="w-rail-foot">
+                  <div class="ritem">
+                    <span class="rname">Filters</span
+                    ><span class="rsum">*.jpg *.heic *.mov</span>
+                  </div>
+                  <div class="ritem">
+                    <span class="rname">After renaming</span
+                    ><span class="rsum">Off</span>
+                  </div>
+                </div>
+              </div>
+              <div class="w-editor" id="w-editor"></div>
               <div class="w-list">
                 <div class="w-row w-head">
                   <span class="c-check"
@@ -129,58 +160,12 @@
                 </div>
                 <div id="w-rows" class="w-rows"></div>
               </div>
-              <aside class="w-steps">
-                <div class="w-steps-head">
-                  <span>Steps</span><span class="muted">Run top to bottom</span>
-                </div>
-                <div class="step" data-step="name">
-                  <div class="step-head">
-                    <span class="grip">⠿</span><span class="num">1</span
-                    ><span class="step-name">Name</span
-                    ><span class="box"></span>
-                  </div>
-                  <div class="step-field">
-                    <span class="flabel">New name</span
-                    ><span class="input" id="w-name">Lisbon</span>
-                  </div>
-                </div>
-                <div class="step" data-step="numbers">
-                  <div class="step-head">
-                    <span class="grip">⠿</span><span class="num">2</span
-                    ><span class="step-name">Numbers</span
-                    ><span class="box"></span>
-                  </div>
-                  <div class="step-field split">
-                    <span
-                      ><span class="flabel">Position</span
-                      ><span class="input">After the name</span></span
-                    >
-                    <span
-                      ><span class="flabel">Digits</span
-                      ><span class="input">3</span></span
-                    >
-                  </div>
-                </div>
-                <div class="step" data-step="ext">
-                  <div class="step-head">
-                    <span class="grip">⠿</span><span class="num">3</span
-                    ><span class="step-name">Extension</span
-                    ><span class="box"></span>
-                  </div>
-                  <div class="step-field">
-                    <span class="flabel">Action</span
-                    ><span class="input">lower case</span>
-                  </div>
-                </div>
-                <div class="add-step">+ Add step</div>
-              </aside>
             </div>
             <div class="w-status">
               <span class="w-counts" id="w-counts"
                 >9 of 10 included · 9 will change</span
               >
               <span class="w-msg" id="w-msg"></span>
-              <span class="w-rename" id="w-rename">Rename 9</span>
             </div>
           </div>
         </div>

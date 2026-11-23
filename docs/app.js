@@ -66,6 +66,7 @@ const hero = {
   nameText: "Lisbon",
   typing: false,
   focus: null,
+  sel: "name", // The step shown in the editor column.
   msg: "",
   pressed: false,
 };
@@ -93,15 +94,17 @@ function preview() {
 }
 
 function renderHero() {
+  if (hero.focus) hero.sel = hero.focus;
   const p = preview();
   $("w-rows").innerHTML = hero.rows
     .map((r, i) => {
       const q = p[i];
+      const arrow = '<span class="arrow">→</span>';
       let nn = "";
-      if (q.status === "changed") nn = diff(r.name, q.name);
+      if (q.status === "changed") nn = arrow + diff(r.name, q.name);
       else if (q.status === "same") nn = esc(q.name);
       else if (q.status === "conflict")
-        nn = `${esc(q.name)}<span class="flag">Conflict</span>`;
+        nn = `${arrow}${esc(q.name)}<span class="flag">Conflict</span>`;
       return `<div class="w-row ${q.status}">
         <span class="c-check"><span class="box${r.checked ? " on" : ""}"></span></span>
         <span class="c-name">${esc(r.name)}</span>
@@ -118,21 +121,57 @@ function renderHero() {
   $("w-counts").innerHTML =
     `${included} of ${hero.rows.length} included · ${changed} will change` +
     (conflicts ? ` · <span class="bad">${conflicts} conflicts</span>` : "");
+  renderEditor();
   const btn = $("w-rename");
   btn.textContent = `Rename ${changed}`;
   btn.classList.toggle("idle", changed === 0);
   btn.classList.toggle("pressed", hero.pressed);
   $("w-msg").textContent = hero.msg;
 
-  document.querySelectorAll(".step").forEach((el) => {
+  document.querySelectorAll(".ritem[data-step]").forEach((el) => {
     const on = hero.steps[el.dataset.step];
-    el.querySelector(".box").classList.toggle("on", on);
-    el.classList.toggle("disabled", !on);
-    el.classList.toggle("focus", hero.focus === el.dataset.step);
+    el.classList.toggle("off", !on);
+    el.classList.toggle("sel", hero.sel === el.dataset.step);
+    const sum = el.querySelector(".rsum");
+    sum.textContent = on ? SUMMARY[el.dataset.step]() : "Off";
   });
-  const nameEl = $("w-name");
-  nameEl.textContent = hero.nameText;
-  nameEl.classList.toggle("typing", hero.typing);
+}
+
+// What each step's row in the step list says, as in the app.
+const SUMMARY = {
+  name: () => hero.nameText || "Set a new name",
+  numbers: () => "001",
+  ext: () => "lower case",
+};
+
+const field = (label, value, id = "") =>
+  `<div class="efield"><span class="flabel">${label}</span><span class="input"${id ? ` id="${id}"` : ""}>${esc(value)}</span></div>`;
+const EDITOR = {
+  name: [
+    "1",
+    "Name",
+    () =>
+      field("Action", "Set a new name") +
+      field("New name", hero.nameText, "w-name"),
+  ],
+  numbers: [
+    "2",
+    "Numbers",
+    () =>
+      `<div class="split">${field("Position", "After the name")}${field("Digits", "3")}</div>` +
+      field("Start", "1"),
+  ],
+  ext: ["3", "Extension", () => field("Action", "lower case")],
+};
+
+// The editor column shows the selected step, like the app.
+function renderEditor() {
+  const [num, label, body] = EDITOR[hero.sel];
+  const on = hero.steps[hero.sel];
+  $("w-editor").innerHTML =
+    `<div class="ehead"><span class="num">${num}</span><span class="ename">${label}</span><span class="eon"><span class="box${on ? " on" : ""}"></span>${on ? "On" : "Off"}</span></div>
+    <div class="efields${on ? "" : " disabled"}">${body()}</div>`;
+  $("w-name")?.classList.toggle("typing", hero.typing);
 }
 
 function doRename() {

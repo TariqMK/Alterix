@@ -1,5 +1,5 @@
-<!-- Main window: toolbar and menus, filters, the file list with live preview, the step
-     pipeline, the status bar, keyboard shortcuts, drag and drop and startup. -->
+<!-- Main window: toolbar and menus, the step list and editor, the file list with live
+     preview, the status bar, keyboard shortcuts, drag and drop and startup. -->
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
   import { listen } from "@tauri-apps/api/event";
@@ -11,12 +11,10 @@
   import Dialogs from "./lib/Dialogs.svelte";
   import Icon from "./lib/Icon.svelte";
   import FileList from "./lib/FileList.svelte";
-  import FiltersBar from "./lib/FiltersBar.svelte";
   import Pipeline from "./lib/Pipeline.svelte";
   import { app, isMac, PRESET_EXT } from "./lib/state.svelte";
 
   let menu = $state<"list" | "presets" | null>(null);
-  let showFilters = $state(false);
   let list: FileList | undefined = $state();
   let modHeld = false;
   let slot: HTMLSpanElement | undefined = $state();
@@ -45,19 +43,6 @@
   );
   const mod = isMac() ? "⌘" : "Ctrl+";
 
-  const filtersActive = $derived(
-    app.filters.mask.trim() !== "*" ||
-      app.filters.folders ||
-      app.filters.hidden ||
-      app.filters.subfolders ||
-      !app.filters.files ||
-      !!app.filters.condition.trim() ||
-      app.filters.nameMin +
-        app.filters.nameMax +
-        app.filters.pathMin +
-        app.filters.pathMax >
-        0,
-  );
   const folderLabel = $derived(
     app.folders.length
       ? app.folders[0]
@@ -361,41 +346,34 @@
   onclick={() => (menu = null)}
 />
 
-<div
-  class="app"
-  style:--pipeline-width={app.settings.wideList ? "0px" : "380px"}
->
+<div class="app" class:narrow={app.settings.wideList}>
   <header class="bar">
     <h1>Alterix</h1>
     <span class="vslot" bind:this={slot} aria-hidden="true">
       {app.updateChecking ? "checking…" : version}
     </span>
+    <div class="group">
+      <button onclick={openFolder} title="Open a folder ({mod}O)">
+        Open folder…
+      </button>
+      <button onclick={addFiles} title="Add files to the list">
+        Add files…
+      </button>
+      <button
+        class="icon-btn"
+        onclick={() => app.refresh()}
+        title="Refresh (F5)"
+        aria-label="Refresh"
+      >
+        <Icon name="refresh" />
+      </button>
+    </div>
     <button
       class="path"
       title="Go to folder ({mod}J)"
       onclick={() => (app.dialog = "jump")}
     >
       <bdi>{folderLabel}</bdi>
-    </button>
-    <div class="spacer"></div>
-    <button onclick={openFolder} title="Open a folder ({mod}O)">
-      Open folder…
-    </button>
-    <button onclick={addFiles} title="Add files to the list">Add files…</button>
-    <button
-      class="icon-btn"
-      onclick={() => app.refresh()}
-      title="Refresh (F5)"
-      aria-label="Refresh"
-    >
-      <Icon name="refresh" />
-    </button>
-    <button
-      class:on={showFilters || filtersActive}
-      onclick={() => (showFilters = !showFilters)}
-      aria-expanded={showFilters}
-    >
-      Filters{filtersActive ? " •" : ""}
     </button>
     <div class="menuwrap">
       <button
@@ -526,11 +504,23 @@
     >
       <Icon name="settings" />
     </button>
+    {#if !app.settings.autoRefresh}<button onclick={() => app.runPreview()}>
+        Preview <kbd>{mod}P</kbd>
+      </button>{/if}
+    <button
+      class="primary rename"
+      title="Rename the included items ({mod}R)"
+      disabled={app.busy || (!app.counts.changed && !app.checkedRows.length)}
+      onclick={() => app.rename()}
+    >
+      {app.options.copy && app.options.newLocation.trim()
+        ? "Copy"
+        : "Rename"}{app.counts.changed ? ` ${app.counts.changed}` : ""}
+    </button>
   </header>
 
-  {#if showFilters}<FiltersBar onclose={() => (showFilters = false)} />{/if}
-
   <main>
+    <Pipeline />
     <section class="files" aria-label="Files">
       {#if app.rows.length === 0}
         <div class="empty">
@@ -549,7 +539,6 @@
         <FileList bind:this={list} />
       {/if}
     </section>
-    {#if !app.settings.wideList}<Pipeline />{/if}
   </main>
 
   <footer class="bar status">
@@ -584,32 +573,7 @@
         </button>{/if}
     {/if}
     <div class="spacer"></div>
-    {#if app.busy || app.previewing}<span class="muted small">
-        Working…
-      </span>{/if}
-    <button
-      class="icon-btn"
-      title="Larger file list (F9)"
-      aria-label="Toggle steps panel"
-      onclick={() => (
-        (app.settings.wideList = !app.settings.wideList),
-        app.saveSettings()
-      )}
-    >
-      <Icon name="panel" />
-    </button>
-    {#if !app.settings.autoRefresh}<button onclick={() => app.runPreview()}>
-        Preview <kbd>{mod}P</kbd>
-      </button>{/if}
-    <button
-      class="primary"
-      disabled={app.busy || (!app.counts.changed && !app.checkedRows.length)}
-      onclick={() => app.rename()}
-    >
-      {app.options.copy && app.options.newLocation.trim()
-        ? "Copy"
-        : "Rename"}{app.counts.changed ? ` ${app.counts.changed}` : ""}
-    </button>
+    {#if app.busy || app.previewing}<span class="muted">Working…</span>{/if}
   </footer>
 </div>
 
@@ -636,22 +600,39 @@
   .app {
     position: relative;
     display: grid;
-    grid-template-rows: auto auto 1fr auto;
+    grid-template-rows: auto minmax(0, 1fr) auto;
     height: 100vh;
   }
   .bar {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     padding: 8px 12px;
     border-bottom: 1px solid var(--line);
     min-width: 0;
   }
+  header.bar {
+    grid-row: 1;
+    min-height: 48px;
+    background: var(--panel);
+  }
+  .group {
+    display: flex;
+    gap: 8px;
+    margin-left: 8px;
+  }
+  .rename {
+    margin-left: 8px;
+  }
   .status {
+    grid-row: 3;
+    min-height: 32px;
+    padding-block: 4px;
     border-top: 1px solid var(--line);
     border-bottom: 0;
     font-size: 12px;
-    gap: 14px;
+    color: var(--text-2);
+    gap: 16px;
   }
   .status > span {
     white-space: nowrap;
@@ -659,10 +640,9 @@
     text-overflow: ellipsis;
   }
   h1 {
-    margin: 0 4px 0 2px;
+    margin: 0 4px 0 4px;
     font-size: 15px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    font-weight: 600;
   }
   .vslot {
     visibility: hidden;
@@ -697,10 +677,12 @@
     opacity: 1;
   }
   .path {
+    flex: 1;
+    margin-left: 8px;
     border: 0;
     background: transparent;
     color: var(--muted);
-    max-width: 38vw;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -713,16 +695,20 @@
   .spacer {
     flex: 1;
   }
-  .on {
-    border-color: var(--accent);
-  }
   .icon-btn {
-    padding: 4px 9px;
+    padding: 4px 8px;
+    color: var(--text-2);
   }
+  /* Fixed rows, so the status bar always stays at the bottom of the window. Columns: the
+     step list, the step editor (hidden with F9) and the file list. */
   main {
+    grid-row: 2;
     display: grid;
-    grid-template-columns: 1fr var(--pipeline-width);
+    grid-template-columns: 200px 320px minmax(0, 1fr);
     min-height: 0;
+  }
+  .narrow main {
+    grid-template-columns: 200px minmax(0, 1fr);
   }
   .files {
     min-width: 0;
@@ -739,9 +725,9 @@
     padding: 24px;
   }
   .empty h2 {
-    margin: 0;
+    margin: 0 0 4px;
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 500;
   }
   .empty p {
     margin: 0;
@@ -749,7 +735,7 @@
   .cta {
     display: flex;
     gap: 8px;
-    margin: 10px 0;
+    margin: 12px 0;
   }
   .menuwrap {
     position: relative;
@@ -778,7 +764,9 @@
     border: 0;
     background: transparent;
     text-align: left;
-    padding: 5px 8px;
+    padding: 4px 8px;
+    min-height: 28px;
+    align-items: center;
     white-space: nowrap;
   }
   .menu button:hover:not(:disabled) {
