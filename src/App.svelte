@@ -326,13 +326,20 @@
         }),
       );
       cleanups.push(
+        // Tauri closes the window after this handler returns, so it must never throw.
         await getCurrentWindow().onCloseRequested(async () => {
-          app.rememberCriteria();
+          const failed = (e: unknown) =>
+            app.log("error", "app", `Saving on close failed: ${e}`);
+          try {
+            app.rememberCriteria();
+          } catch (e) {
+            failed(e);
+          }
           if (app.settings.autoSavePreset && app.presetPath)
-            await app.savePreset(app.presetPath).catch(() => {});
+            await app.savePreset(app.presetPath).catch(failed);
           await invoke("save_settings", {
             settings: $state.snapshot(app.settings),
-          }).catch(() => {});
+          }).catch(failed);
         }),
       );
     })().catch((e) => app.setError(e));
