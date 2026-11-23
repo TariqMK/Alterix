@@ -1,0 +1,275 @@
+<!doctype html>
+<!-- Alterix product page for GitHub Pages: hero with a live app preview, principles, features, download, feedback and footer. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Alterix: bulk renaming you can see and undo</title>
+    <meta
+      name="description"
+      content="Alterix renames many files at once, shows each new name before anything changes, and can undo every rename. Free for Windows, macOS and Linux. Works offline."
+    />
+    <meta name="theme-color" content="#111317" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f4f2ee" media="(prefers-color-scheme: light)" />
+    <meta name="color-scheme" content="dark light" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Alterix: bulk renaming you can see and undo" />
+    <meta
+      property="og:description"
+      content="Rename many files at once. See each new name first. Undo any rename. Free, offline, for Windows, macOS and Linux."
+    />
+    <meta property="og:url" content="https://tariqmk.github.io/Alterix/" />
+    <meta property="og:image" content="https://tariqmk.github.io/Alterix/social-card.png" />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="640" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Alterix: bulk renaming you can see and undo" />
+    <meta
+      name="twitter:description"
+      content="Rename many files at once. See each new name first. Undo any rename. Free, offline, for Windows, macOS and Linux."
+    />
+    <meta name="twitter:image" content="https://tariqmk.github.io/Alterix/social-card.png" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <a class="brand" href="#top" aria-label="Alterix home">
+          <img src="icon.svg" alt="" width="24" height="24" />
+          <span>Alterix</span>
+        </a>
+        <nav class="nav-links" aria-label="Sections">
+          <a href="#features">Features</a>
+          <a href="#download">Download</a>
+          <a href="https://github.com/TariqMK/Alterix">GitHub</a>
+        </nav>
+        <a class="btn btn-primary btn-small" href="#download">Download</a>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-lines" aria-hidden="true"></div>
+        <div class="wrap hero-text">
+          <h1>Bulk renaming you can <br />see and undo</h1>
+          <p class="lede">
+            Alterix renames many files at once. It shows each new name before anything changes,
+            and it can undo every rename.
+          </p>
+          <div class="actions">
+            <a id="hero-download" class="btn btn-primary" href="https://github.com/TariqMK/Alterix/releases/latest">Download Alterix</a>
+            <a class="btn btn-ghost" href="https://github.com/TariqMK/Alterix">View source</a>
+          </div>
+          <p id="hero-meta" class="meta">Free · Open source · Offline · No tracking</p>
+        </div>
+
+        <div class="wrap">
+          <div class="window" id="demo" aria-label="A live preview of the Alterix window renaming holiday photos" role="img">
+            <div class="w-toolbar">
+              <span class="w-title">Alterix <span class="w-ver" id="w-ver">v1.0.0</span></span>
+              <span class="w-path">/Users/alex/Pictures/Holiday 2025</span>
+              <span class="w-tools">
+                <span class="w-btn hide-md">Open folder…</span>
+                <span class="w-btn hide-md">Add files…</span>
+                <span class="w-btn w-on">Filters ▾</span>
+                <span class="w-btn hide-sm">List ▾</span>
+                <span class="w-btn hide-sm">Presets ▾</span>
+                <span class="w-btn">History</span>
+              </span>
+            </div>
+            <div class="w-body">
+              <div class="w-list">
+                <div class="w-row w-head">
+                  <span class="c-check"><span class="box box-mixed"></span></span>
+                  <span class="c-name">Name</span>
+                  <span class="c-new">New name</span>
+                  <span class="c-size">Size</span>
+                  <span class="c-date">Modified</span>
+                </div>
+                <div id="w-rows" class="w-rows"></div>
+              </div>
+              <aside class="w-steps">
+                <div class="w-steps-head"><span>Steps</span><span class="muted">Run top to bottom</span></div>
+                <div class="step" data-step="name">
+                  <div class="step-head"><span class="grip">⠿</span><span class="num">1</span><span class="step-name">Name</span><span class="box"></span></div>
+                  <div class="step-field"><span class="flabel">New name</span><span class="input" id="w-name">Lisbon</span></div>
+                </div>
+                <div class="step" data-step="numbers">
+                  <div class="step-head"><span class="grip">⠿</span><span class="num">2</span><span class="step-name">Numbers</span><span class="box"></span></div>
+                  <div class="step-field split">
+                    <span><span class="flabel">Position</span><span class="input">After the name</span></span>
+                    <span><span class="flabel">Digits</span><span class="input">3</span></span>
+                  </div>
+                </div>
+                <div class="step" data-step="ext">
+                  <div class="step-head"><span class="grip">⠿</span><span class="num">3</span><span class="step-name">Extension</span><span class="box"></span></div>
+                  <div class="step-field"><span class="flabel">Action</span><span class="input">lower case</span></div>
+                </div>
+                <div class="add-step">+ Add step</div>
+              </aside>
+            </div>
+            <div class="w-status">
+              <span class="w-counts" id="w-counts">9 of 10 included · 9 will change</span>
+              <span class="w-msg" id="w-msg"></span>
+              <span class="w-rename" id="w-rename">Rename 9</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="principles">
+        <div class="wrap grid3">
+          <div>
+            <h2>See it before it happens</h2>
+            <p>Each new name shows next to the old one as you type. Names that clash, or that would break on another system, are marked before you rename.</p>
+          </div>
+          <div>
+            <h2>Every rename can be undone</h2>
+            <p>Each rename goes into History. Undo puts the old names back, even after you restart Alterix. Replaced files go to the system trash.</p>
+          </div>
+          <div>
+            <h2>Stays on your computer</h2>
+            <p>Works offline. No accounts, no tracking, no adverts. It only goes online when you ask it to check for updates.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="features" id="features">
+        <div class="wrap">
+          <h2 class="section-title">Every renaming tool in one clear window</h2>
+          <p class="section-lede">Add the steps you need. Alterix shows the result while you work.</p>
+
+          <div class="panel panel-wide">
+            <div class="panel-text">
+              <h3>Messy names, tidied in a few steps</h3>
+              <p>Steps run from top to bottom. Switch one off to see what it does. Try it here.</p>
+            </div>
+            <div class="pipe">
+              <div class="pipe-steps" id="pipe-steps">
+                <label class="pstep"><input type="checkbox" data-p="0" checked /><span class="num">1</span><span class="pname">Remove</span><span class="pval">Words: copy</span></label>
+                <label class="pstep"><input type="checkbox" data-p="1" checked /><span class="num">2</span><span class="pname">Replace text</span><span class="pval">_ → space</span></label>
+                <label class="pstep"><input type="checkbox" data-p="2" checked /><span class="num">3</span><span class="pname">Change case</span><span class="pval">Title Case</span></label>
+                <label class="pstep"><input type="checkbox" data-p="3" checked /><span class="num">4</span><span class="pname">Numbers</span><span class="pval">Before the name</span></label>
+              </div>
+              <div class="pipe-list">
+                <div class="prow phead"><span>Name</span><span>New name</span></div>
+                <div id="pipe-rows"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-pair">
+            <div class="panel">
+              <div class="panel-text">
+                <h3>Names that come from inside your files</h3>
+                <p>Name photos by the date they were taken and the camera. Name music by track, artist and title. Name PDFs by their title.</p>
+              </div>
+              <div class="tags">
+                <div class="tag-tabs" id="tag-tabs">
+                  <button type="button" data-t="0">Photos</button><button type="button" data-t="1">Music</button><button type="button" data-t="2">Documents</button>
+                </div>
+                <div class="tag-field"><span class="flabel">New name</span><span class="input mono" id="tag-tpl"></span></div>
+                <div class="tag-rows" id="tag-rows"></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-text">
+                <h3>Changed your mind? Undo it</h3>
+                <p>Select <b>Undo</b> in History and the old names come back. Or press <kbd>⌘</kbd><kbd>Z</kbd> straight after a rename.</p>
+              </div>
+              <div class="hist" id="hist">
+                <div class="hist-entry" id="hist-a">
+                  <div class="hist-top">
+                    <span><b>10 items renamed</b><span class="muted hist-meta" id="hist-a-meta">2025-06-16 20:15:42</span></span>
+                    <span class="hbtn hbtn-primary" id="hist-undo">Undo</span>
+                  </div>
+                  <div class="hist-items" id="hist-items"></div>
+                </div>
+                <div class="hist-entry hist-dim">
+                  <div class="hist-top">
+                    <span><b>4 items renamed</b><span class="muted hist-meta">2025-06-15 18:02:10 · undone</span></span>
+                    <span class="hbtn hbtn-primary hbtn-off">Undo</span>
+                  </div>
+                </div>
+                <p class="hist-msg muted" id="hist-msg">&nbsp;</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-features">
+            <div><h4>Problems caught early</h4><p>Clashing names and names that break on another system are marked before you rename.</p></div>
+            <div><h4>Filters</h4><p>Show only the files you want with masks such as <code>*.jpg !*_old.*</code>.</p></div>
+            <div><h4>Subfolders and hidden files</h4><p>Include files in subfolders, hidden files, or the folders themselves.</p></div>
+            <div><h4>Tick what changes</h4><p>Untick any item to leave it exactly as it is.</p></div>
+            <div><h4>Move or copy</h4><p>Send renamed files to another folder in the same run.</p></div>
+            <div><h4>Dates and attributes</h4><p>Set file dates and attributes while you rename.</p></div>
+            <div><h4>Presets</h4><p>Save your steps as a preset and open it again later.</p></div>
+            <div><h4>Presets that load themselves</h4><p>A preset named <code>_autoload.alterix</code> loads when you open its folder.</p></div>
+            <div><h4>Rename from a list</h4><p>Import old and new name pairs from a file or the clipboard.</p></div>
+            <div><h4>Regular expressions</h4><p>Match and replace with patterns when plain text isn't enough.</p></div>
+            <div><h4>Rename one by hand</h4><p>Select an item and press <kbd>F2</kbd> to rename just that one.</p></div>
+            <div><h4>Open in Alterix</h4><p>Add it to your file manager's menu in Settings. Off until you add it.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="download" id="download">
+        <div class="wrap">
+          <h2 class="section-title">Download Alterix</h2>
+          <p class="section-lede"><span id="dl-version" class="mono">Latest release on GitHub</span></p>
+          <div class="platforms">
+            <div class="platform" data-os="windows">
+              <span class="p-top"><b>Windows</b><span class="size mono">.exe</span></span>
+              <span class="p-file mono">Single .exe file</span>
+              <span class="p-note">Windows 10 or later. Put it in a folder you can write to and open it.</span>
+              <a class="btn btn-ghost btn-small dl" href="https://github.com/TariqMK/Alterix/releases/latest">Download for Windows</a>
+            </div>
+            <div class="platform" data-os="macos">
+              <span class="p-top"><b>macOS</b><span class="size mono">.zip</span></span>
+              <span class="p-file mono">Apple Silicon · macOS 11 or later</span>
+              <span class="p-note">Unzip it and move Alterix to Applications. Apple hasn't notarised it, so macOS shows a warning the first time.</span>
+              <a class="btn btn-ghost btn-small dl" href="https://github.com/TariqMK/Alterix/releases/latest">Download for macOS</a>
+              <a class="p-help" href="https://github.com/TariqMK/Alterix#opening-on-macos">First time opening it? Here's how</a>
+            </div>
+            <div class="platform" data-os="linux">
+              <span class="p-top"><b>Linux</b><span class="size mono">.AppImage</span></span>
+              <span class="p-file mono">x64 · single .AppImage file</span>
+              <span class="p-note">Mark the file as executable, then open it.</span>
+              <a class="btn btn-ghost btn-small dl" href="https://github.com/TariqMK/Alterix/releases/latest">Download for Linux</a>
+            </div>
+          </div>
+          <p class="fine">
+            Alterix keeps its settings and history in an <code>Alterix-data</code> folder next to the app. Move both together to take everything with you.
+            Want to build it yourself? See the <a href="https://github.com/TariqMK/Alterix#for-developers">developer notes</a>.
+          </p>
+        </div>
+      </section>
+
+      <section class="feedback">
+        <div class="wrap feedback-inner">
+          <p>Found a problem, or have an idea? Tell us on GitHub.</p>
+          <span class="feedback-links">
+            <a href="https://github.com/TariqMK/Alterix/issues/new?template=bug.yml">Report a bug</a>
+            <a href="https://github.com/TariqMK/Alterix/issues/new?template=idea.yml">Suggest an idea</a>
+          </span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer-inner">
+        <span class="brand"><img src="icon.svg" alt="" width="20" height="20" /><span>Alterix</span></span>
+        <span class="muted">Free software under the GPL-3.0 licence. Nothing is renamed until you select Rename.</span>
+        <span class="footer-links">
+          <a href="https://github.com/TariqMK/Alterix">GitHub</a>
+          <a href="https://github.com/TariqMK/Alterix/releases">Releases</a>
+          <a href="https://github.com/TariqMK/Alterix/issues">Issues</a>
+        </span>
+      </div>
+    </footer>
+  </body>
+</html>
