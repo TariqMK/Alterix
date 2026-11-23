@@ -1,0 +1,207 @@
+# Builds Alterix for Windows, macOS (Apple Silicon) and Linux, then publishes a GitHub
+# release. Run it by hand from the Actions tab. main makes a normal release; any other
+# branch makes a pre-release branch build. Nothing is ever committed or pushed.
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: Draft (only you can see it) or public
+        type: choice
+        options: [draft, public]
+        default: draft
+      bump:
+        description: Which part of the version goes up
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  APP: Alterix
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Tests
+        run: npm test
+
+  version:
+    needs: test
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    outputs:
+      tag: ${{ steps.next.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Work out next version
+        id: next
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUMP: ${{ inputs.bump }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          branch_arg=()
+          if [ "$BRANCH" != main ]; then branch_arg=("$BRANCH"); fi
+          tag=$(
+            {
+              git tag --list
+              gh api --paginate "repos/$GITHUB_REPOSITORY/releases" --jq '.[].tag_name'
+            } | bash .github/scripts/next_version.sh "$BUMP" "${branch_arg[@]}"
+          )
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Building $tag ($BUMP)" >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    needs: version
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: windows-latest
+            target: windows-x64
+          - os: macos-latest
+            target: macos-arm64
+          - os: ubuntu-24.04
+            target: linux-x64
+    runs-on: ${{ matrix.os }}
+    env:
+      TAG: ${{ needs.version.outputs.tag }}
+      TARGET: ${{ matrix.target }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: ${{ matrix.target }}
+
+      - name: Install Linux packages
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev patchelf file
+
+      - name: Check the Mac is Apple Silicon
+        if: runner.os == 'macOS'
+        run: test "$(uname -m)" = arm64
+
+      - name: Apply the version
+        run: |
+          node -e '
+            const fs = require("fs");
+            const p = "src-tauri/Cargo.toml";
+            const v = process.env.TAG.replace(/^v/, "");
+            const t = fs.readFileSync(p, "utf8").replace(/^version = ".*"$/m, `version = "${v}"`);
+            if (!t.includes(`version = "${v}"`)) process.exit(1);
+            fs.writeFileSync(p, t);
+          '
+          grep -m1 '^version = ' src-tauri/Cargo.toml
+
+      - run: npm ci
+
+      - name: Build
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: "1"
+        run: |
+          case "$RUNNER_OS" in
+            Windows) npx tauri build --no-bundle ;;
+            macOS) npx tauri build --bundles app ;;
+            Linux) npx tauri build --bundles appimage ;;
+          esac
+
+      - name: Check and package
+        run: |
+          test -f dist/index.html || { echo "The web assets were not built"; exit 1; }
+          mkdir -p out
+          name="$APP-$TAG-$TARGET"
+          case "$RUNNER_OS" in
+            Windows)
+              exe=src-tauri/target/release/alterix.exe
+              test -s "$exe"
+              cp "$exe" "out/$name.exe"
+              ;;
+            macOS)
+              app="src-tauri/target/release/bundle/macos/$APP.app"
+              test -d "$app"
+              ls "$app/Contents/Resources/"*.icns >/dev/null || { echo "The .app has no icon"; exit 1; }
+              ditto -c -k --keepParent "$app" "out/$name.zip"
+              ;;
+            Linux)
+              img=$(ls src-tauri/target/release/bundle/appimage/*.AppImage | head -n 1)
+              test -s "$img"
+              cp "$img" "out/$name.AppImage"
+              chmod +x "out/$name.AppImage"
+              ;;
+          esac
+          ls -l out
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: build-${{ matrix.target }}
+          path: out/*
+          if-no-files-found: error
+
+  release:
+    needs: [version, build]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ needs.version.outputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+      KIND: ${{ inputs.release }}
+      BRANCH: ${{ github.ref_name }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: out
+          pattern: build-*
+          merge-multiple: true
+      - name: Create tag and release
+        run: |
+          ls -l out
+          test -n "$(ls out)" || { echo "No files to release"; exit 1; }
+          gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$TAG" -f sha="$GITHUB_SHA"
+          flags=(--verify-tag --repo "$GITHUB_REPOSITORY" --title "$APP $TAG" --generate-notes)
+          if [ "$KIND" = draft ]; then flags+=(--draft); fi
+          if [ "$BRANCH" != main ]; then flags+=(--prerelease --latest=false); fi
+          gh release create "$TAG" out/* "${flags[@]}"
+          echo "Released $TAG ($KIND)" >> "$GITHUB_STEP_SUMMARY"

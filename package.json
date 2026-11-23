@@ -1,0 +1,36 @@
+{
+  "name": "alterix",
+  "private": true,
+  "description": "Free, open-source, cross-platform bulk file renamer.",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "format": "prettier --write . && cargo fmt --manifest-path src-tauri/Cargo.toml",
+    "lint": "prettier --check . && svelte-check --tsconfig ./tsconfig.json && cargo fmt --manifest-path src-tauri/Cargo.toml --check && cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml && vitest run",
+    "tauri": "tauri",
+    "app": "tauri dev"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.12.5",
+    "@tauri-apps/plugin-clipboard-manager": "^2.5.0",
+    "@tauri-apps/plugin-dialog": "^2.8.4",
+    "@tauri-apps/plugin-opener": "^2.7.3"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@tauri-apps/cli": "^2.12.6",
+    "@tsconfig/svelte": "^5.0.9",
+    "playwright": "^1.65.1",
+    "prettier": "^3.10.1",
+    "prettier-plugin-svelte": "^4.2.0",
+    "svelte": "^5.59.1",
+    "svelte-check": "^4.7.8",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  }
+}

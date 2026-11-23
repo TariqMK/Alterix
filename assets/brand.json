@@ -1,0 +1,41 @@
+{
+  "name": "Alterix",
+  "tagline": "Bulk renaming you can see and undo.",
+  "subline": "Windows · macOS · Linux",
+  "icon": "icon/alterix.svg",
+  "fonts": {
+    "ui": [
+      "SF Pro Display",
+      "SF Pro Text",
+      "Segoe UI",
+      "Inter",
+      "Ubuntu",
+      "Helvetica Neue",
+      "Arial"
+    ],
+    "mono": ["SF Mono", "Menlo", "Consolas", "DejaVu Sans Mono"]
+  },
+  "accent": "#f2b544",
+  "semantic": {
+    "error": "#f0716a"
+  },
+  "themes": {
+    "dark": {
+      "bg": "#15181d",
+      "surface": "#22272f",
+      "border": "#2e343d",
+      "text": "#e6e8eb",
+      "text_secondary": "#8b939e",
+      "text_muted": "#8b939e"
+    },
+    "light": {
+      "bg": "#fbfaf8",
+      "surface": "#ffffff",
+      "border": "#e2ded7",
+      "text": "#1c2129",
+      "text_secondary": "#6b7280",
+      "text_muted": "#6b7280"
+    }
+  },
+  "subtitle": "November 2026"
+}
