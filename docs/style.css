@@ -489,6 +489,17 @@ h1 {
 .ritem.off .rname {
   color: var(--muted);
 }
+/* The remove × shows on the selected step, as in the app. */
+.rrm {
+  display: none;
+  flex: none;
+  width: 16px;
+  text-align: center;
+  color: var(--muted);
+}
+.ritem.sel .rrm {
+  display: inline;
+}
 .rsum {
   flex: 1;
   min-width: 0;

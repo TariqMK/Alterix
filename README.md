@@ -120,7 +120,7 @@ You can run this instead:
 1. Select **Open folder…** and choose a folder. You can also drop files or folders onto the window.
 2. In the step list, select **+ Add step** and choose a step, for example **Replace text**.
 3. Fill in the step in the editor beside the list. The **New name** column updates as you type.
-4. Add more steps if you need them. Drag a step in the list to change the order.
+4. Add more steps if you need them. Drag a step in the list to change the order. To remove a step, point at it in the list and select **×**.
 5. Untick any item you want to leave as it is.
 6. Select **Rename** at the top right of the window.
 
