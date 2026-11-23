@@ -122,7 +122,9 @@ fn open_for_times(path: &Path) -> std::io::Result<std::fs::File> {
 
 /// Applies attribute changes. Returns a note when an attribute is not supported here.
 pub fn set_attributes(path: &Path, a: &Attributes) -> Result<Option<String>, String> {
-    let mut notes = Vec::new();
+    // Only macOS and Linux add notes, so Windows needs the type spelled out.
+    #[cfg_attr(windows, allow(unused_mut))]
+    let mut notes: Vec<&str> = Vec::new();
     if a.read_only != Tri::Keep {
         let md = std::fs::metadata(path).map_err(|e| e.to_string())?;
         let mut p = md.permissions();
