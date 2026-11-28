@@ -190,6 +190,14 @@ A source run shows the version `v0.0.0-dev` and keeps its data in `Alterix-data/
     npm test        # Rust engine tests and front-end tests
     npm run lint    # Prettier, svelte-check, rustfmt and clippy
 
+To check a built app, use its self-test and the end-to-end check. Use the executable inside the app: `Alterix.app/Contents/MacOS/alterix` on macOS, `Alterix.exe` on Windows, the `.AppImage` on Linux.
+
+    <app> --self-test
+    python scripts/check_e2e.py --app <app>
+
+- The self-test loads the bundled web files, the rename engine and the script engine. It prints `Alterix vX.Y.Z` and exits with 0, or lists what is missing and exits with 1.
+- The end-to-end check renames made-up files in a new temporary folder, then undoes the renames. It checks the names, the file contents and the logs after each step. It needs Python 3 and nothing else.
+
 </details>
 
 <details>
@@ -245,7 +253,7 @@ Releases are built by GitHub Actions (`.github/workflows/release.yml`). The work
 4. Choose **patch**, **minor** or **major**.
 5. Select **Run workflow**.
 
-The workflow runs the lint and tests, works out the next version from the existing tags and releases (drafts included), builds Windows, macOS (Apple Silicon) and Linux, then tags the built commit and creates the release "Alterix vX.Y.Z" with automatic notes.
+The workflow runs the lint and tests, works out the next version from the existing tags and releases (drafts included), builds Windows, macOS (Apple Silicon) and Linux, runs the self-test on each build, then tags the built commit and creates the release "Alterix vX.Y.Z" with automatic notes.
 
 - Windows: a single `.exe`. macOS: the `.app` in a `.zip`. Linux: a single `.AppImage`.
 - The version comes from the tag. It is written into `src-tauri/Cargo.toml` on the build machine only.

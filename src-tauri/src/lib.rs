@@ -2,6 +2,7 @@
 //! command-line paths and the main window.
 
 pub mod applog;
+mod check;
 mod commands;
 pub mod engine;
 pub mod feedback;
@@ -25,6 +26,11 @@ fn path_args(args: impl IntoIterator<Item = String>) -> Vec<String> {
 }
 
 pub fn run() {
+    let context = tauri::generate_context!();
+    let args: Vec<String> = std::env::args().collect();
+    if let Some(code) = check::from_args(&args, &context) {
+        std::process::exit(code);
+    }
     let store = store::Store::new();
     let status = store.status();
     applog::start(&store.dir(), status.writable);
@@ -106,7 +112,7 @@ pub fn run() {
             applog::info("app", "Window opened");
             Ok(())
         })
-        .build(tauri::generate_context!())
+        .build(context)
         .expect("error while starting Alterix")
         .run(|_app, event| {
             if let tauri::RunEvent::Exit = event {

@@ -273,77 +273,95 @@ pub struct RenameReq {
 
 #[tauri::command]
 pub async fn rename(app: AppHandle, req: RenameReq) -> Res<Report> {
-    blocking(app, move |s| {
-        // File facts may have changed since the last preview.
-        for it in &req.preview.items {
-            s.cache.forget(Path::new(&it.path));
-        }
-        let p = run_preview(s, &req.preview)?;
-        let o = &req.preview.options;
-        let copy = o.copy && !o.new_location.trim().is_empty();
-        let plan = ops::Plan {
-            items: &p.items,
+    blocking(app, move |s| rename_now(s, req)).await
+}
+
+/// Re-checks and runs a rename, logs it and records it for undo. Used by the rename
+/// command and by the `--check-rename` mode.
+pub fn rename_now(s: &AppState, req: RenameReq) -> Res<Report> {
+    // File facts may have changed since the last preview.
+    for it in &req.preview.items {
+        s.cache.forget(Path::new(&it.path));
+    }
+    let p = run_preview(s, &req.preview)?;
+    let o = &req.preview.options;
+    let copy = o.copy && !o.new_location.trim().is_empty();
+    let plan = ops::Plan {
+        items: &p.items,
+        copy,
+        overwrite: o.overwrite,
+        reverse: req.reverse,
+        attributes: &o.attributes,
+        set_times: o.timestamps != engine::Timestamps::default()
+            || req
+                .preview
+                .rules
+                .iter()
+                .any(|r| matches!(r, Rule::Script { .. })),
+    };
+    let kinds: Vec<&str> = req.preview.rules.iter().map(|r| r.label()).collect();
+    applog::info(
+        "rename",
+        &format!(
+            "Rename started: {} item(s), steps [{}], copy {}, new location {}, overwrite {}, reverse {}",
+            p.items.len(),
+            kinds.join(", "),
             copy,
-            overwrite: o.overwrite,
-            reverse: req.reverse,
-            attributes: &o.attributes,
-            set_times: o.timestamps != engine::Timestamps::default()
-                || req
-                    .preview
-                    .rules
-                    .iter()
-                    .any(|r| matches!(r, Rule::Script { .. })),
-        };
-        let kinds: Vec<&str> = req.preview.rules.iter().map(|r| r.label()).collect();
-        applog::info(
+            if o.new_location.trim().is_empty() { "none" } else { "set" },
+            o.overwrite,
+            req.reverse
+        ),
+    );
+    let t = std::time::Instant::now();
+    let (report, batch) = ops::execute(&plan);
+    applog::info(
+        "rename",
+        &format!(
+            "Rename finished in {} ms: {} done, {} not done",
+            t.elapsed().as_millis(),
+            report.renamed,
+            report.failed
+        ),
+    );
+    for r in report.results.iter().filter(|r| !r.ok) {
+        applog::warn(
             "rename",
             &format!(
-                "Rename started: {} item(s), steps [{}], copy {}, new location {}, overwrite {}, reverse {}",
-                p.items.len(),
-                kinds.join(", "),
-                copy,
-                if o.new_location.trim().is_empty() { "none" } else { "set" },
-                o.overwrite,
-                req.reverse
+                "Not renamed {}: {}",
+                r.path,
+                r.message.clone().unwrap_or_default()
             ),
         );
-        let t = std::time::Instant::now();
-        let (report, batch) = ops::execute(&plan);
-        applog::info("rename", &format!("Rename finished in {} ms: {} done, {} not done", t.elapsed().as_millis(), report.renamed, report.failed));
-        for r in report.results.iter().filter(|r| !r.ok) {
-            applog::warn("rename", &format!("Not renamed {}: {}", r.path, r.message.clone().unwrap_or_default()));
-        }
-        for r in &report.results {
-            s.cache.forget(Path::new(&r.path));
-            s.cache.forget(Path::new(&r.new_path));
-        }
-        if req.log {
-            let mut lines: Vec<String> = report
-                .results
-                .iter()
-                .filter(|r| r.path != r.new_path || !r.ok)
-                .map(|r| match (&r.ok, &r.message) {
-                    (true, _) => format!(
-                        "{} {} -> {}",
-                        if copy { "COPY" } else { "RENAME" },
-                        r.path,
-                        r.new_path
-                    ),
-                    (false, m) => format!("FAILED {}: {}", r.path, m.clone().unwrap_or_default()),
-                })
-                .collect();
-            lines.push(format!(
-                "Done: {} changed, {} failed.",
-                report.renamed, report.failed
-            ));
-            s.store.log(&lines);
-        }
-        if let Some(b) = batch {
-            s.store.push_history(b)?;
-        }
-        Ok(report)
-    })
-    .await
+    }
+    for r in &report.results {
+        s.cache.forget(Path::new(&r.path));
+        s.cache.forget(Path::new(&r.new_path));
+    }
+    if req.log {
+        let mut lines: Vec<String> = report
+            .results
+            .iter()
+            .filter(|r| r.path != r.new_path || !r.ok)
+            .map(|r| match (&r.ok, &r.message) {
+                (true, _) => format!(
+                    "{} {} -> {}",
+                    if copy { "COPY" } else { "RENAME" },
+                    r.path,
+                    r.new_path
+                ),
+                (false, m) => format!("FAILED {}: {}", r.path, m.clone().unwrap_or_default()),
+            })
+            .collect();
+        lines.push(format!(
+            "Done: {} changed, {} failed.",
+            report.renamed, report.failed
+        ));
+        s.store.log(&lines);
+    }
+    if let Some(b) = batch {
+        s.store.push_history(b)?;
+    }
+    Ok(report)
 }
 
 /// Renames one item by hand (F2), outside the pipeline. Recorded for undo.
@@ -416,61 +434,63 @@ pub fn history(state: State<AppState>) -> Vec<Batch> {
 
 #[tauri::command]
 pub async fn undo(app: AppHandle, id: String, log: bool) -> Res<Report> {
-    blocking(app, move |s| {
-        let mut h = s.store.history();
-        let b = h
-            .iter_mut()
-            .find(|b| b.id == id)
-            .ok_or("This rename is no longer in the history.")?;
-        if b.undone {
-            return Err("This rename has already been undone.".into());
-        }
-        let report = ops::undo(b);
-        applog::info(
+    blocking(app, move |s| undo_now(s, &id, log)).await
+}
+
+/// Undoes one batch from the history. Used by the undo command and `--check-undo`.
+pub fn undo_now(s: &AppState, id: &str, log: bool) -> Res<Report> {
+    let mut h = s.store.history();
+    let b = h
+        .iter_mut()
+        .find(|b| b.id == id)
+        .ok_or("This rename is no longer in the history.")?;
+    if b.undone {
+        return Err("This rename has already been undone.".into());
+    }
+    let report = ops::undo(b);
+    applog::info(
+        "undo",
+        &format!(
+            "Undo of batch {} ({}): {} restored, {} failed",
+            b.id, b.summary, report.renamed, report.failed
+        ),
+    );
+    for r in report.results.iter().filter(|r| !r.ok) {
+        applog::warn(
             "undo",
             &format!(
-                "Undo of batch {} ({}): {} restored, {} failed",
-                b.id, b.summary, report.renamed, report.failed
+                "Not restored {}: {}",
+                r.path,
+                r.message.clone().unwrap_or_default()
             ),
         );
-        for r in report.results.iter().filter(|r| !r.ok) {
-            applog::warn(
-                "undo",
-                &format!(
-                    "Not restored {}: {}",
+    }
+    b.undone = report.failed == 0 || report.renamed > 0;
+    for r in &report.results {
+        s.cache.forget(Path::new(&r.path));
+        s.cache.forget(Path::new(&r.new_path));
+    }
+    if log {
+        let mut lines: Vec<String> = report
+            .results
+            .iter()
+            .map(|r| {
+                format!(
+                    "UNDO {} -> {}{}",
                     r.path,
-                    r.message.clone().unwrap_or_default()
-                ),
-            );
-        }
-        b.undone = report.failed == 0 || report.renamed > 0;
-        for r in &report.results {
-            s.cache.forget(Path::new(&r.path));
-            s.cache.forget(Path::new(&r.new_path));
-        }
-        if log {
-            let mut lines: Vec<String> = report
-                .results
-                .iter()
-                .map(|r| {
-                    format!(
-                        "UNDO {} -> {}{}",
-                        r.path,
-                        r.new_path,
-                        if r.ok { "" } else { " (failed)" }
-                    )
-                })
-                .collect();
-            lines.push(format!(
-                "Undo done: {} restored, {} failed.",
-                report.renamed, report.failed
-            ));
-            s.store.log(&lines);
-        }
-        s.store.replace_history(&h)?;
-        Ok(report)
-    })
-    .await
+                    r.new_path,
+                    if r.ok { "" } else { " (failed)" }
+                )
+            })
+            .collect();
+        lines.push(format!(
+            "Undo done: {} restored, {} failed.",
+            report.renamed, report.failed
+        ));
+        s.store.log(&lines);
+    }
+    s.store.replace_history(&h)?;
+    Ok(report)
 }
 
 #[tauri::command]

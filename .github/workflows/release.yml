@@ -147,6 +147,30 @@ jobs:
             Linux) npx tauri build --bundles appimage ;;
           esac
 
+      # Starts the real build. It proves the bundled web files, engine and scripts load and the version is right.
+      # A windowed .exe has no console, so Windows checks the exit code only.
+      - name: Self-test (macOS, Linux)
+        if: runner.os != 'Windows'
+        timeout-minutes: 5
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: "1"
+        run: |
+          case "$RUNNER_OS" in
+            macOS) exe="src-tauri/target/release/bundle/macos/$APP.app/Contents/MacOS/alterix" ;;
+            Linux) exe=$(ls src-tauri/target/release/bundle/appimage/*.AppImage | head -n 1) ;;
+          esac
+          output=$("$exe" --self-test)
+          echo "$output"
+          [ "$(tail -n 1 <<< "$output")" = "$APP $TAG" ] || { echo "::error::Expected '$APP $TAG'"; exit 1; }
+
+      - name: Self-test (Windows)
+        if: runner.os == 'Windows'
+        timeout-minutes: 5
+        shell: pwsh
+        run: |
+          $p = Start-Process "src-tauri/target/release/alterix.exe" -ArgumentList '--self-test' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "Self-test failed with exit code $($p.ExitCode)" }
+
       - name: Check and package
         run: |
           test -f dist/index.html || { echo "The web assets were not built"; exit 1; }
