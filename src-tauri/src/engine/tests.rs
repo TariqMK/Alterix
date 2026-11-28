@@ -696,7 +696,9 @@ fn imported_pairs_and_overrides() {
         "Headlong.mp3"
     );
     let mut ov = HashMap::new();
-    ov.insert("/nonexistent/dir/x.txt".to_string(), "y.txt".to_string());
+    // Key by the item's own path, as the UI does (Windows joins it with "\\").
+    let key = items("/nonexistent/dir", &["x.txt"]).remove(0).path;
+    ov.insert(key, "y.txt".to_string());
     let opts = Options {
         overrides: ov,
         ..Options::default()

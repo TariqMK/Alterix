@@ -383,6 +383,16 @@ mod tests {
         ] {
             std::fs::write(root.join(p), "x").unwrap();
         }
+        // Windows hides files by attribute, not by a leading dot.
+        #[cfg(windows)]
+        crate::ops::set_attributes(
+            &root.join(".hidden.jpg"),
+            &crate::engine::Attributes {
+                hidden: crate::engine::Tri::Set,
+                ..Default::default()
+            },
+        )
+        .unwrap();
         let r = vec![root.to_string_lossy().into_owned()];
         let names = |fl: &Filters| {
             scan(&r, fl, None)
